@@ -53,6 +53,17 @@ A site's effective entitlements = **union of its own entitlements + its parent o
 - **Site** — an individual facility or plant (e.g., Acme Foods Chicago). Always belongs to exactly one organization. May hold site-level entitlements in addition to inheriting org-level ones.
 - **`tenantId`** always refers to a **Site** — the most granular billing and data-isolation unit. It travels on every API request, database row, log line, metric, trace, and event. No data structure is tenant-agnostic.
 - **Users** belong to one or more sites (via `user_tenant_memberships`). A user may have different roles across sites.
+
+### User roles (domain-confirmed 2026-06-23)
+
+| Role | ID | Description |
+|---|---|---|
+| Owner | `owner` | Account owner — full control, billing, org management |
+| Global Admin | `globaladmin` | Admin across all sites within the organization |
+| Admin | `admin` | Admin within a single site |
+| User | `user` | Standard end-user — can operate modules they have access to |
+
+`minRequiredRole` in module manifests gates which roles can access a module. Server-side enforcement is deferred (Open Item #7); v1 is display-only.
 - **Entitlements** are held at either the Organization or Site level. The Platform API resolves effective entitlements by unioning both before returning the module manifest list.
 - **Entitlement expiry is enforced at query time** — every API route that reads entitlements filters server-side: `status = 'active' AND (expires_at IS NULL OR expires_at > now())`. The `status` field alone is not sufficient; query-time expiry filtering is mandatory on every entitlement access path.
 - **Authentication is deferred.** No identity provider is wired at this time. The entitlement model and `tenantId` scaffolding are built now so auth can be added without structural rework. All endpoints that will require auth enforcement before production are marked `// TODO: auth-gate`.
@@ -146,7 +157,7 @@ Each IQ module is self-describing via one manifest. The Platform API serves the 
   "color": "#29ABE2",
   "baseRoute": "/iq/atp",
   "serviceUrl": "https://atp.suretrend.app",
-  "minRequiredRole": "technician",
+  "minRequiredRole": "user",
   "pricingLabel": "$X/mo",
   "supportedLocales": ["en-US"],
   "nav": [
@@ -217,4 +228,4 @@ Each IQ module is self-describing via one manifest. The Platform API serves the 
 | 7 | `minRequiredRole` server-side enforcement | Engineering | No for v1 (display only); Yes before auth is wired |
 | 8 | 21 CFR Part 11 §11.10 compliance audit — immutable audit trail, electronic signature, access log design | Engineering + SME | Yes — required before any regulated customer goes live |
 | 9 | Org/Site billing hierarchy implementation (ADR-007) | Engineering | Yes — current flat tenant model cannot support corporate + site billing |
-| 10 | User role names aligned with SureTrend domain (SME to define) | sromig@hygiena.com | No for v1; Yes before auth is wired |
+| 10 | ~~User role names aligned with SureTrend domain~~ — **Resolved 2026-06-23.** Roles confirmed: Owner / Global Admin / Admin / User. Implemented in seed.sql, live DB, and iq-catalog.js. | sromig@hygiena.com | Closed |

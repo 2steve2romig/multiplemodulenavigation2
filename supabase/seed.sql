@@ -1,6 +1,6 @@
--- SureTrend Platform — Module Manifest Seed
+﻿-- SureTrend Platform - Module Manifest Seed
 -- Derived from iq-catalog.js. Run after 001_platform_schema.sql.
--- Uses service role (RLS bypass) — run via Supabase dashboard or CLI.
+-- Uses service role (RLS bypass) - run via Supabase dashboard or CLI.
 
 INSERT INTO module_manifests (id, manifest) VALUES
 
@@ -12,7 +12,7 @@ INSERT INTO module_manifests (id, manifest) VALUES
   "color": "#1B8A7A",
   "baseRoute": "/iq/atp",
   "serviceUrl": "",
-  "minRequiredRole": "technician",
+  "minRequiredRole": "user",
   "pricingLabel": "$229/mo",
   "supportedLocales": ["en-US"],
   "nav": [
@@ -33,7 +33,7 @@ INSERT INTO module_manifests (id, manifest) VALUES
   "color": "#29ABE2",
   "baseRoute": "/iq/map",
   "serviceUrl": "",
-  "minRequiredRole": "technician",
+  "minRequiredRole": "user",
   "pricingLabel": "$199/mo",
   "supportedLocales": ["en-US"],
   "nav": [
@@ -54,7 +54,7 @@ INSERT INTO module_manifests (id, manifest) VALUES
   "color": "#9B2E7D",
   "baseRoute": "/iq/sample",
   "serviceUrl": "",
-  "minRequiredRole": "technician",
+  "minRequiredRole": "user",
   "pricingLabel": "$299/mo",
   "supportedLocales": ["en-US"],
   "nav": [
@@ -75,7 +75,7 @@ INSERT INTO module_manifests (id, manifest) VALUES
   "color": "#1B7A8C",
   "baseRoute": "/iq/clean",
   "serviceUrl": "",
-  "minRequiredRole": "technician",
+  "minRequiredRole": "user",
   "pricingLabel": "$199/mo",
   "supportedLocales": ["en-US"],
   "nav": [
@@ -96,7 +96,7 @@ INSERT INTO module_manifests (id, manifest) VALUES
   "color": "#1F8A3B",
   "baseRoute": "/iq/plan",
   "serviceUrl": "",
-  "minRequiredRole": "supervisor",
+  "minRequiredRole": "admin",
   "pricingLabel": "$249/mo",
   "supportedLocales": ["en-US"],
   "nav": [
@@ -117,7 +117,7 @@ INSERT INTO module_manifests (id, manifest) VALUES
   "color": "#5C8C25",
   "baseRoute": "/iq/supplier",
   "serviceUrl": "",
-  "minRequiredRole": "supervisor",
+  "minRequiredRole": "admin",
   "pricingLabel": "$149/mo",
   "supportedLocales": ["en-US"],
   "nav": [
@@ -138,7 +138,7 @@ INSERT INTO module_manifests (id, manifest) VALUES
   "color": "#B5A678",
   "baseRoute": "/iq/lab",
   "serviceUrl": "",
-  "minRequiredRole": "technician",
+  "minRequiredRole": "user",
   "pricingLabel": "$349/mo",
   "supportedLocales": ["en-US"],
   "nav": [
@@ -159,7 +159,7 @@ INSERT INTO module_manifests (id, manifest) VALUES
   "color": "#6B3FB5",
   "baseRoute": "/iq/correct",
   "serviceUrl": "",
-  "minRequiredRole": "technician",
+  "minRequiredRole": "user",
   "pricingLabel": "$249/mo",
   "supportedLocales": ["en-US"],
   "nav": [
@@ -201,7 +201,7 @@ INSERT INTO module_manifests (id, manifest) VALUES
   "color": "#D9A823",
   "baseRoute": "/iq/trace",
   "serviceUrl": "",
-  "minRequiredRole": "technician",
+  "minRequiredRole": "user",
   "pricingLabel": "$349/mo",
   "supportedLocales": ["en-US"],
   "nav": [
@@ -222,7 +222,7 @@ INSERT INTO module_manifests (id, manifest) VALUES
   "color": "#B53636",
   "baseRoute": "/iq/risk",
   "serviceUrl": "",
-  "minRequiredRole": "supervisor",
+  "minRequiredRole": "admin",
   "pricingLabel": "$399/mo",
   "supportedLocales": ["en-US"],
   "nav": [
@@ -264,7 +264,7 @@ INSERT INTO module_manifests (id, manifest) VALUES
   "color": "#1F4FBF",
   "baseRoute": "/iq/audit",
   "serviceUrl": "",
-  "minRequiredRole": "supervisor",
+  "minRequiredRole": "admin",
   "pricingLabel": "$199/mo",
   "supportedLocales": ["en-US"],
   "nav": [
