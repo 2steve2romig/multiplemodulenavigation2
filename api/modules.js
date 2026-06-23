@@ -3,12 +3,13 @@
 // GET /api/modules
 // Returns module manifests for modules this tenant is entitled to.
 // Entitlement filtering is server-side — the client only receives what it may see.
+// Resolves effective entitlements = site entitlements UNION org entitlements (ADR-007).
 // TODO: auth-gate — verify JWT before trusting tenantId (see ADR-006).
 
 const { resolveTenant } = require('./_middleware/resolveTenant');
 const { handleCors } = require('./_middleware/cors');
 const { supabase } = require('./_lib/supabase');
-const { filterActiveEntitlements, filterEntitledManifests } = require('./_lib/entitlements');
+const { filterActiveEntitlements, filterEntitledManifests, unionEntitlements } = require('./_lib/entitlements');
 
 module.exports = async (req, res) => {
   if (handleCors(req, res)) return;
@@ -19,21 +20,40 @@ module.exports = async (req, res) => {
 
   const tenantId = req.tenantId;
 
-  const [entResult, manifestResult] = await Promise.all([
-    supabase
-      .from('entitlements')
-      .select('module_id, status, expires_at')
-      .eq('tenant_id', tenantId),
-    supabase
-      .from('module_manifests')
-      .select('id, manifest')
-      .eq('is_active', true),
-  ]);
+  // Resolve org_id for this site (ADR-007: org/site hierarchy).
+  const tenantResult = await supabase
+    .from('tenants')
+    .select('org_id')
+    .eq('id', tenantId)
+    .single();
+
+  const orgId = tenantResult.data && tenantResult.data.org_id;
+
+  // Fetch site entitlements, org entitlements (if site belongs to an org),
+  // and module manifests in parallel.
+  const queries = [
+    supabase.from('entitlements').select('module_id, status, expires_at').eq('tenant_id', tenantId),
+    supabase.from('module_manifests').select('id, manifest').eq('is_active', true),
+  ];
+
+  if (orgId) {
+    queries.push(
+      supabase.from('org_entitlements').select('module_id, status, expires_at').eq('org_id', orgId)
+    );
+  }
+
+  const [entResult, manifestResult, orgEntResult] = await Promise.all(queries);
 
   if (entResult.error) return res.status(500).json({ error: 'Failed to load entitlements' });
   if (manifestResult.error) return res.status(500).json({ error: 'Failed to load manifests' });
+  if (orgEntResult && orgEntResult.error) return res.status(500).json({ error: 'Failed to load org entitlements' });
 
-  const active = filterActiveEntitlements(entResult.data);
+  // Union site + org entitlements; deduplicate by module_id (site row wins on conflict).
+  const siteRows = entResult.data || [];
+  const orgRows = (orgEntResult && orgEntResult.data) || [];
+  const merged = unionEntitlements(siteRows, orgRows);
+
+  const active = filterActiveEntitlements(merged);
   const entitledIds = active.map(e => e.module_id);
   const modules = filterEntitledManifests(manifestResult.data, entitledIds)
     .map(row => row.manifest);

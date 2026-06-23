@@ -1,6 +1,6 @@
 'use strict';
 
-const { filterActiveEntitlements, filterEntitledManifests } = require('../../api/_lib/entitlements');
+const { filterActiveEntitlements, filterEntitledManifests, unionEntitlements } = require('../../api/_lib/entitlements');
 
 const NOW = new Date('2026-06-23T12:00:00Z');
 
@@ -74,5 +74,58 @@ describe('filterEntitledManifests', () => {
   test('ignores entitled IDs with no matching manifest', () => {
     const result = filterEntitledManifests(manifests, ['atp', 'nonexistent']);
     expect(result.map(m => m.id)).toEqual(['atp']);
+  });
+});
+
+// ─── unionEntitlements ───────────────────────────────────────────────────────
+
+describe('unionEntitlements', () => {
+  test('returns org entitlements when site has none', () => {
+    const org = [{ module_id: 'atp', status: 'active', expires_at: null }];
+    const result = unionEntitlements([], org);
+    expect(result).toHaveLength(1);
+    expect(result[0].module_id).toBe('atp');
+  });
+
+  test('returns site entitlements when org has none', () => {
+    const site = [{ module_id: 'map', status: 'active', expires_at: null }];
+    const result = unionEntitlements(site, []);
+    expect(result).toHaveLength(1);
+    expect(result[0].module_id).toBe('map');
+  });
+
+  test('unions distinct modules from both levels', () => {
+    const site = [{ module_id: 'map',  status: 'active', expires_at: null }];
+    const org  = [{ module_id: 'atp',  status: 'active', expires_at: null }];
+    const result = unionEntitlements(site, org);
+    const ids = result.map(r => r.module_id).sort();
+    expect(ids).toEqual(['atp', 'map']);
+  });
+
+  test('site row wins on module_id conflict', () => {
+    const site = [{ module_id: 'atp', status: 'suspended', expires_at: null }];
+    const org  = [{ module_id: 'atp', status: 'active',    expires_at: null }];
+    const result = unionEntitlements(site, org);
+    expect(result).toHaveLength(1);
+    expect(result[0].status).toBe('suspended'); // site overrides org
+  });
+
+  test('returns empty array when both are empty', () => {
+    expect(unionEntitlements([], [])).toEqual([]);
+  });
+
+  test('deduplicates — no duplicate module_ids in result', () => {
+    const site = [
+      { module_id: 'atp', status: 'active', expires_at: null },
+      { module_id: 'map', status: 'active', expires_at: null },
+    ];
+    const org = [
+      { module_id: 'atp',  status: 'active', expires_at: null },
+      { module_id: 'plan', status: 'active', expires_at: null },
+    ];
+    const result = unionEntitlements(site, org);
+    const ids = result.map(r => r.module_id);
+    expect(new Set(ids).size).toBe(ids.length); // no duplicates
+    expect(ids.sort()).toEqual(['atp', 'map', 'plan']);
   });
 });

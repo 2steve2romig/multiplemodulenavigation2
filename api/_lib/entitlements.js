@@ -19,4 +19,14 @@ function filterEntitledManifests(manifests, entitledModuleIds) {
   return manifests.filter(m => idSet.has(m.id));
 }
 
-module.exports = { filterActiveEntitlements, filterEntitledManifests };
+// Unions site-level and org-level entitlement rows by module_id.
+// Site rows take precedence on conflict (a site can independently suspend a module
+// the org has active, e.g. during a compliance hold).
+function unionEntitlements(siteRows, orgRows) {
+  const map = new Map();
+  for (const row of orgRows) map.set(row.module_id, row);
+  for (const row of siteRows) map.set(row.module_id, row); // site wins
+  return Array.from(map.values());
+}
+
+module.exports = { filterActiveEntitlements, filterEntitledManifests, unionEntitlements };
