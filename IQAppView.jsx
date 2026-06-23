@@ -19,7 +19,7 @@ function IQAppView({ id, onNav }) {
     );
   }
 
-  const s = p.stats;
+  const s = p.stats || { open: '—', openDelta: 0, completed: '—', onTime: '—', passRate: '—' };
 
   return (
     <div className="iqa-page" style={{ "--iq": p.color }}>
