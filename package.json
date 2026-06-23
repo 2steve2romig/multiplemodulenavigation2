@@ -6,6 +6,7 @@
     "node": ">=18.0.0"
   },
   "scripts": {
+    "build": "echo 'No build step — static site with serverless functions in api/'",
     "test": "jest",
     "test:unit": "jest test/unit",
     "test:integration": "jest test/integration"
