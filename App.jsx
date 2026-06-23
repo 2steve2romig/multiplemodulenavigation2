@@ -19,8 +19,16 @@ function App() {
       .then(r => r.ok ? r.json() : Promise.reject(r.status))
       .then(({ modules }) => {
         if (modules && modules.length > 0) {
-          window.IQ_CATALOG = modules;
-          window.IQ_BY_ID = Object.fromEntries(modules.map(m => [m.id, m]));
+          // Normalize API manifest fields to match what legacy components expect:
+          // displayName → name, description → desc, category → cats[]
+          const normalized = modules.map(m => ({
+            ...m,
+            name: m.displayName,
+            desc: m.description,
+            cats: [m.category],
+          }));
+          window.IQ_CATALOG = normalized;
+          window.IQ_BY_ID = Object.fromEntries(normalized.map(m => [m.id, m]));
         }
       })
       .catch(() => { /* fall back to iq-catalog.js globals already on window */ })

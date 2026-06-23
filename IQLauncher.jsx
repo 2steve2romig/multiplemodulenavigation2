@@ -121,8 +121,8 @@ function IQLauncherPanel({ open, onClose, anchorRef, selected, onSelect, onNav }
 
   if (!open) return null;
 
-  let items = IQ_LAUNCHER_ITEMS.filter((it) => {
-    return tab === "all" || it.cats.indexOf(tab) !== -1;
+  let items = (window.IQ_CATALOG || IQ_LAUNCHER_ITEMS).filter((it) => {
+    return tab === "all" || (it.cats || []).indexOf(tab) !== -1;
   });
   const currentTab = IQ_LAUNCHER_TABS.find((t) => t.id === tab) || IQ_LAUNCHER_TABS[0];
 
