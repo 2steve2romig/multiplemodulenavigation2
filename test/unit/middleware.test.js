@@ -5,12 +5,12 @@ const { requireAdminSecret } = require('../../api/_middleware/requireAdminSecret
 
 // ─── resolveTenant ───────────────────────────────────────────────────────────
 
-describe('extractTenantId (dev mode)', () => {
-  const originalEnv = process.env.NODE_ENV;
-  beforeEach(() => { process.env.NODE_ENV = 'development'; });
-  afterEach(() => { process.env.NODE_ENV = originalEnv; });
+describe('extractTenantId (ALLOW_DEV_TENANT_HEADER enabled)', () => {
+  const original = process.env.ALLOW_DEV_TENANT_HEADER;
+  beforeEach(() => { process.env.ALLOW_DEV_TENANT_HEADER = 'true'; });
+  afterEach(() => { process.env.ALLOW_DEV_TENANT_HEADER = original; });
 
-  test('returns tenantId from X-Tenant-ID header in dev', async () => {
+  test('returns tenantId from X-Tenant-ID header when flag is set', async () => {
     const req = { headers: { 'x-tenant-id': 'tenant-abc' } };
     expect(await extractTenantId(req)).toBe('tenant-abc');
   });
@@ -21,21 +21,21 @@ describe('extractTenantId (dev mode)', () => {
   });
 });
 
-describe('extractTenantId (production mode)', () => {
-  const originalEnv = process.env.NODE_ENV;
-  beforeEach(() => { process.env.NODE_ENV = 'production'; });
-  afterEach(() => { process.env.NODE_ENV = originalEnv; });
+describe('extractTenantId (ALLOW_DEV_TENANT_HEADER disabled)', () => {
+  const original = process.env.ALLOW_DEV_TENANT_HEADER;
+  beforeEach(() => { delete process.env.ALLOW_DEV_TENANT_HEADER; });
+  afterEach(() => { process.env.ALLOW_DEV_TENANT_HEADER = original; });
 
-  test('ignores X-Tenant-ID header in production', async () => {
+  test('ignores X-Tenant-ID header when flag is not set', async () => {
     const req = { headers: { 'x-tenant-id': 'tenant-abc' } };
     expect(await extractTenantId(req)).toBeNull();
   });
 });
 
 describe('resolveTenant middleware', () => {
-  const originalEnv = process.env.NODE_ENV;
-  beforeEach(() => { process.env.NODE_ENV = 'development'; });
-  afterEach(() => { process.env.NODE_ENV = originalEnv; });
+  const original = process.env.ALLOW_DEV_TENANT_HEADER;
+  beforeEach(() => { process.env.ALLOW_DEV_TENANT_HEADER = 'true'; });
+  afterEach(() => { process.env.ALLOW_DEV_TENANT_HEADER = original; });
 
   test('attaches tenantId to req and calls next()', async () => {
     const req = { headers: { 'x-tenant-id': 'tenant-xyz' } };

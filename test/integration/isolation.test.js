@@ -13,17 +13,20 @@
 
 const { createClient } = require('@supabase/supabase-js');
 
-const required = ['SUPABASE_URL', 'SUPABASE_ANON_KEY', 'TENANT_A_ID', 'TENANT_B_ID', 'PLATFORM_URL'];
-const missing = required.filter(k => !process.env[k]);
-if (missing.length) {
-  console.warn(`Isolation tests skipped — missing env vars: ${missing.join(', ')}`);
-}
+const apiRequired = ['PLATFORM_URL', 'TENANT_A_ID', 'TENANT_B_ID'];
+const rlsRequired = ['SUPABASE_URL', 'SUPABASE_ANON_KEY', 'TENANT_A_ID', 'TENANT_B_ID'];
+
+const apiMissing = apiRequired.filter(k => !process.env[k]);
+const rlsMissing = rlsRequired.filter(k => !process.env[k]);
+
+if (apiMissing.length) console.warn(`API isolation tests skipped — missing: ${apiMissing.join(', ')}`);
+if (rlsMissing.length) console.warn(`RLS isolation tests skipped — missing: ${rlsMissing.join(', ')}`);
 
 const describeIf = (cond) => cond ? describe : describe.skip;
 
 // ─── API-layer isolation ─────────────────────────────────────────────────────
 
-describeIf(missing.length === 0)('API cross-tenant isolation', () => {
+describeIf(apiMissing.length === 0)('API cross-tenant isolation', () => {
   const tenantAId = process.env.TENANT_A_ID;
   const tenantBId = process.env.TENANT_B_ID;
 
@@ -54,7 +57,7 @@ describeIf(missing.length === 0)('API cross-tenant isolation', () => {
     bOnly.forEach(id => expect(idsA.has(id)).toBe(false));
   });
 
-  test('absent tenantId returns 400, not another tenant''s data', async () => {
+  test('absent tenantId returns 400, not another tenants data', async () => {
     const res = await fetch(`${process.env.PLATFORM_URL}/api/entitlements`);
     expect(res.status).toBe(400);
   });
@@ -62,7 +65,7 @@ describeIf(missing.length === 0)('API cross-tenant isolation', () => {
 
 // ─── Direct Supabase RLS bypass attempts ────────────────────────────────────
 
-describeIf(missing.length === 0)('Supabase RLS isolation (anon key)', () => {
+describeIf(rlsMissing.length === 0)('Supabase RLS isolation (anon key)', () => {
   let anonClient;
 
   beforeAll(() => {
