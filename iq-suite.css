@@ -371,6 +371,53 @@ html[data-theme="dark"] .iqsw-opt-name { color: #E6ECF2; }
 html[data-theme="dark"] .iqsw-opt-desc { color: #9FB0C0; }
 html[data-theme="dark"] .iqsw-opt-iq { color: #5BB6E0; }
 
+/* ── Corporate plan badges ────────────────────────────────────────────── */
+
+/* IQSuiteView card: small "Corporate" pill next to the category label */
+.iqs-corp-badge {
+  display: inline-flex; align-items: center;
+  margin-left: 6px;
+  font: 600 10px/1 "Open Sans", sans-serif;
+  color: #0A6EA6; background: #E0F0FA;
+  padding: 2px 6px; border-radius: 999px;
+  letter-spacing: .03em; text-transform: none;
+  vertical-align: middle;
+}
+
+/* ModuleSubscriptions row: "Corporate" badge next to module name */
+.iqm-corp-badge {
+  display: inline-flex; align-items: center;
+  margin-left: 6px;
+  font: 600 10px/1 "Open Sans", sans-serif;
+  color: #0A6EA6; background: #E0F0FA;
+  padding: 2px 6px; border-radius: 999px;
+  letter-spacing: .03em;
+}
+
+/* "Included in corporate plan" label replaces the price for org modules */
+.iqm-row-corp-label {
+  flex-shrink: 0; min-width: 78px;
+  font: 600 11px/1.3 "Open Sans", sans-serif;
+  color: #0A6EA6; text-align: right; margin-right: 4px;
+}
+
+/* Locked switch for org modules */
+.iqm-switch.iqm-switch-locked { cursor: not-allowed; opacity: .55; }
+.iqm-switch.iqm-switch-locked.on { background: #0A6EA6; }
+
+/* Summary sidebar note about corporate modules */
+.iqm-sum-corp-note {
+  font: 400 11.5px/1.4 "Open Sans", sans-serif;
+  color: #0A6EA6; background: #E0F0FA;
+  border-radius: 6px; padding: 7px 10px; margin: 6px 0 4px;
+}
+
+html[data-theme="dark"] .iqs-corp-badge,
+html[data-theme="dark"] .iqm-corp-badge { background: rgba(10,110,166,.22); color: #5BB6E0; }
+html[data-theme="dark"] .iqm-row-corp-label { color: #5BB6E0; }
+html[data-theme="dark"] .iqm-sum-corp-note { background: rgba(10,110,166,.15); color: #5BB6E0; }
+html[data-theme="dark"] .iqm-switch.iqm-switch-locked.on { background: #1565A0; }
+
 @media (max-width: 1000px) {
   .iqm-body { grid-template-columns: 1fr; }
   .iqm-summary { border-left: 0; border-top: 1px solid #EDEFF2; }

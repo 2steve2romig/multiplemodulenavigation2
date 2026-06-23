@@ -85,7 +85,10 @@ function IQSuiteView({ onNav, onClose }) {
                 {p.name}<span className="iqs-card-iq">IQ</span>
               </span>
               <span className="iqs-card-desc">{p.desc}</span>
-              <span className="iqs-card-cat">{catLabel(p.category)}</span>
+              <span className="iqs-card-cat">
+                {catLabel(p.category)}
+                {p._source === 'org' ? <span className="iqs-corp-badge">Corporate</span> : null}
+              </span>
             </span>
             <span className="iqs-card-go" aria-hidden="true">
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>

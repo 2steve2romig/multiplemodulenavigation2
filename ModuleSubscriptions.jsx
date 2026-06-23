@@ -8,6 +8,8 @@
 //   • Toggling is staged — nothing bills until "Apply changes" is pressed;
 //     "Discard" reverts to the last applied state. Changed cards are flagged.
 //   • Category tabs + search keep a 14-app grid scannable.
+//   • Org-inherited modules (p._source === 'org') are locked — managed at the
+//     corporate level, not billed to this site, and cannot be toggled off.
 
 function fmtUSD(n) {
   return "$" + n.toLocaleString("en-US");
@@ -50,8 +52,11 @@ function ModuleSubscriptions({ open, flash, onClose }) {
     setDraft((d) => ({ ...d, [pid]: !d[pid] }));
   };
 
+  // Org modules are not billed to the site — exclude from cost totals.
+  const siteBilled = (p) => p._source !== 'org';
+
   const sumFor = (state) =>
-    window.IQ_CATALOG.reduce((acc, p) => acc + (state[p.id] ? p.price : 0), 0);
+    window.IQ_CATALOG.reduce((acc, p) => acc + (siteBilled(p) && state[p.id] ? p.price : 0), 0);
   const countFor = (state) =>
     window.IQ_CATALOG.filter((p) => state[p.id]).length;
 
@@ -59,8 +64,9 @@ function ModuleSubscriptions({ open, flash, onClose }) {
   const draftTotal = sumFor(draft);
   const delta = draftTotal - appliedTotal;
 
-  const added = window.IQ_CATALOG.filter((p) => draft[p.id] && !applied[p.id]);
-  const removed = window.IQ_CATALOG.filter((p) => !draft[p.id] && applied[p.id]);
+  // Org modules are always on — exclude from site-managed change diff.
+  const added   = window.IQ_CATALOG.filter((p) => siteBilled(p) && draft[p.id] && !applied[p.id]);
+  const removed = window.IQ_CATALOG.filter((p) => siteBilled(p) && !draft[p.id] && applied[p.id]);
   const dirty = added.length > 0 || removed.length > 0;
 
   const query = q.trim().toLowerCase();
@@ -124,24 +130,32 @@ function ModuleSubscriptions({ open, flash, onClose }) {
           <div className="iqm-list">
             {items.map((p) => {
               const on = draft[p.id];
+              const isOrg = p._source === 'org';
               return (
                 <div
                   key={p.id}
-                  className={"iqm-row" + (on ? " on" : "")}
+                  className={"iqm-row" + (on ? " on" : "") + (isOrg ? " iqm-row-org" : "")}
                   style={{ "--iq": p.color }}
                 >
                   <img className="iqm-row-icon" src={RES("assets/iq-icons/iq-" + p.id + ".png")} alt="" aria-hidden="true" draggable="false" />
                   <div className="iqm-row-id">
-                    <div className="iqm-row-name">{p.name}<span className="iqm-card-iq">IQ</span></div>
+                    <div className="iqm-row-name">
+                      {p.name}<span className="iqm-card-iq">IQ</span>
+                      {isOrg ? <span className="iqm-corp-badge">Corporate</span> : null}
+                    </div>
                     <div className="iqm-row-desc">{p.desc}</div>
                   </div>
-                  <span className="iqm-row-price">{fmtUSD(p.price)}<span className="iqm-card-per">/mo</span></span>
+                  {isOrg
+                    ? <span className="iqm-row-corp-label">Included in<br/>corporate plan</span>
+                    : <span className="iqm-row-price">{fmtUSD(p.price)}<span className="iqm-card-per">/mo</span></span>
+                  }
                   <button
-                    className={"iqm-switch" + (on ? " on" : "")}
+                    className={"iqm-switch" + (on ? " on" : "") + (isOrg ? " iqm-switch-locked" : "")}
                     role="switch"
                     aria-checked={on}
-                    aria-label={(on ? "Disable " : "Enable ") + p.name + " IQ"}
-                    onClick={() => toggle(p.id)}
+                    aria-label={isOrg ? p.name + " IQ — managed by corporate plan" : (on ? "Disable " : "Enable ") + p.name + " IQ"}
+                    onClick={() => !isOrg && toggle(p.id)}
+                    disabled={isOrg}
                   >
                     <span className="iqm-switch-knob" />
                   </button>
@@ -155,6 +169,9 @@ function ModuleSubscriptions({ open, flash, onClose }) {
             <div className="iqm-sum-label">Projected monthly cost</div>
             <div className="iqm-sum-total">{fmtUSD(draftTotal)}<span className="iqm-sum-per">/mo</span></div>
             <div className="iqm-sum-count">{countFor(draft)} active modules</div>
+            <div className="iqm-sum-corp-note">
+              Corporate plan modules are billed separately and not included above.
+            </div>
 
             <div className={"iqm-sum-delta" + (delta > 0 ? " up" : delta < 0 ? " down" : " flat")}>
               {delta === 0 ? "No change from current bill"

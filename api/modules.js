@@ -4,6 +4,8 @@
 // Returns module manifests for modules this tenant is entitled to.
 // Entitlement filtering is server-side — the client only receives what it may see.
 // Resolves effective entitlements = site entitlements UNION org entitlements (ADR-007).
+// Each manifest is annotated with _source: 'org' | 'site' so the UI can
+// show whether a module is included via corporate plan or a site subscription.
 // TODO: auth-gate — verify JWT before trusting tenantId (see ADR-006).
 
 const { resolveTenant } = require('./_middleware/resolveTenant');
@@ -48,15 +50,25 @@ module.exports = async (req, res) => {
   if (manifestResult.error) return res.status(500).json({ error: 'Failed to load manifests' });
   if (orgEntResult && orgEntResult.error) return res.status(500).json({ error: 'Failed to load org entitlements' });
 
-  // Union site + org entitlements; deduplicate by module_id (site row wins on conflict).
   const siteRows = entResult.data || [];
   const orgRows = (orgEntResult && orgEntResult.data) || [];
-  const merged = unionEntitlements(siteRows, orgRows);
 
+  // Build source sets before union so we can annotate each module correctly.
+  // _source = 'org' only when the module is exclusively from the org plan
+  // (the site has no independent active entitlement for it).
+  const siteActiveIds = new Set(filterActiveEntitlements(siteRows).map(e => e.module_id));
+  const orgActiveIds  = new Set(filterActiveEntitlements(orgRows).map(e => e.module_id));
+
+  // Union site + org entitlements; deduplicate by module_id (site row wins on conflict).
+  const merged = unionEntitlements(siteRows, orgRows);
   const active = filterActiveEntitlements(merged);
   const entitledIds = active.map(e => e.module_id);
+
   const modules = filterEntitledManifests(manifestResult.data, entitledIds)
-    .map(row => row.manifest);
+    .map(row => ({
+      ...row.manifest,
+      _source: (!siteActiveIds.has(row.id) && orgActiveIds.has(row.id)) ? 'org' : 'site',
+    }));
 
   return res.status(200).json({ modules });
 };
