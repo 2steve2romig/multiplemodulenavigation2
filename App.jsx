@@ -26,6 +26,10 @@ function App() {
             name: m.displayName,
             desc: m.description,
             cats: [m.category],
+            // ModuleAccess filters by defaultOn — all entitled modules are active
+            defaultOn: true,
+            // ModuleSubscriptions uses price as a number; parse from pricingLabel ("$229/mo" → 229)
+            price: parseInt((m.pricingLabel || '').replace(/[^0-9]/g, ''), 10) || 0,
           }));
           window.IQ_CATALOG = normalized;
           window.IQ_BY_ID = Object.fromEntries(normalized.map(m => [m.id, m]));
