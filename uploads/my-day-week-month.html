@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My day / week / month</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.2.0/tabler-icons.min.css">
+<style>
+  :root {
+    --color-background-primary: #ffffff;
+    --color-background-secondary: #f5f4ef;
+    --color-background-tertiary: #ebe9e2;
+    --color-background-info: #e6f1fb;
+    --color-background-warning: #faeeda;
+    --color-background-success: #eaf3de;
+    --color-text-primary: #1a1a1a;
+    --color-text-secondary: #6b6b6b;
+    --color-text-tertiary: #9a9a9a;
+    --color-text-info: #185fa5;
+    --color-text-warning: #854f0b;
+    --color-text-success: #3b6d11;
+    --color-border-tertiary: rgba(0,0,0,0.12);
+    --color-border-secondary: rgba(0,0,0,0.22);
+    --color-border-info: #378add;
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    --border-radius-md: 8px;
+    --border-radius-lg: 12px;
+  }
+  body {
+    font-family: var(--font-sans);
+    background: #fafafa;
+    color: var(--color-text-primary);
+    margin: 0;
+    padding: 2rem;
+    line-height: 1.5;
+  }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0,0,0,0);
+    white-space: nowrap;
+    border: 0;
+  }
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  h2 {
+    font-weight: 500;
+  }
+  .range-btn {
+    background: transparent;
+    border: 0.5px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-md);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    font-family: var(--font-sans);
+    transition: all 0.15s;
+  }
+  .range-btn:hover {
+    background: var(--color-background-primary);
+    border-color: var(--color-border-secondary);
+  }
+  .range-btn.active {
+    background: var(--color-background-primary);
+    border-color: var(--color-border-secondary);
+    color: var(--color-text-primary);
+    font-weight: 500;
+  }
+  .stat-card {
+    background: var(--color-background-secondary);
+    border-radius: var(--border-radius-md);
+    padding: 14px 16px;
+  }
+  .stat-label {
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 6px;
+  }
+  .stat-number {
+    font-size: 28px;
+    font-weight: 500;
+    line-height: 1;
+  }
+  .section-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--color-text-tertiary);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    margin-top: 0;
+  }
+  .task-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    background: var(--color-background-secondary);
+    border-radius: var(--border-radius-md);
+    margin-bottom: 8px;
+  }
+  .task-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--border-radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .task-icon.blue {
+    background: var(--color-background-info);
+    color: var(--color-text-info);
+  }
+  .task-icon.amber {
+    background: var(--color-background-warning);
+    color: var(--color-text-warning);
+  }
+  .task-title {
+    font-weight: 500;
+    font-size: 14px;
+    margin: 0 0 2px;
+  }
+  .task-sub {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    margin: 0;
+  }
+  .task-time {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-text-info);
+    margin-left: auto;
+  }
+  .task-overdue {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-text-warning);
+    margin-left: auto;
+  }
+  .task-row.overdue {
+    background: var(--color-background-warning);
+  }
+  .task-row.overdue .task-title {
+    color: var(--color-text-warning);
+  }
+  .task-row.overdue .task-sub {
+    color: var(--color-text-warning);
+    opacity: 0.85;
+  }
+  .week-day {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 4px;
+    background: var(--color-background-secondary);
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .week-day:hover {
+    background: var(--color-background-primary);
+    border: 0.5px solid var(--color-border-secondary);
+    padding: 11.5px 3.5px;
+  }
+  .week-day.today {
+    background: var(--color-background-info);
+  }
+  .week-day-name {
+    font-size: 11px;
+    color: var(--color-text-secondary);
+    font-weight: 500;
+  }
+  .week-day.today .week-day-name {
+    color: var(--color-text-info);
+  }
+  .week-day-num {
+    font-size: 18px;
+    font-weight: 500;
+  }
+  .week-day.today .week-day-num {
+    color: var(--color-text-info);
+  }
+  .week-day-count {
+    font-size: 11px;
+    color: var(--color-text-tertiary);
+  }
+  .week-day.today .week-day-count {
+    color: var(--color-text-info);
+  }
+  .week-day-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--color-text-warning);
+    margin-top: 2px;
+  }
+  .month-mini {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 3px;
+    max-width: 280px;
+  }
+  .month-cell {
+    aspect-ratio: 1;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: var(--color-text-tertiary);
+  }
+  .heatmap-legend {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--color-text-secondary);
+    margin-top: 10px;
+    max-width: 280px;
+    justify-content: flex-end;
+  }
+  .legend-swatch {
+    width: 11px;
+    height: 11px;
+    border-radius: 2px;
+  }
+</style>
+</head>
+<body>
+
+<h2 class="sr-only">My day component with Day, Week, and Month views</h2>
+
+<div class="container">
+  <div style="background: var(--color-background-secondary); border-radius: var(--border-radius-lg); padding: 1.5rem;">
+
+    <div style="background: var(--color-background-primary); border-radius: var(--border-radius-lg); border: 0.5px solid var(--color-border-tertiary); overflow: hidden;">
+
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem; background: var(--color-background-secondary); border-bottom: 0.5px solid var(--color-border-tertiary);">
+        <h2 id="header-title" style="margin: 0; font-size: 18px;">My day</h2>
+        <div style="display: flex; gap: 6px;">
+          <button class="range-btn active" data-range="day" style="font-size: 13px; padding: 6px 14px;">Day</button>
+          <button class="range-btn" data-range="week" style="font-size: 13px; padding: 6px 14px;">Week</button>
+          <button class="range-btn" data-range="month" style="font-size: 13px; padding: 6px 14px;">Month</button>
+        </div>
+      </div>
+
+      <div style="padding: 1.25rem;">
+        <div id="stats-row" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 1.5rem;"></div>
+        <div id="body-content"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const headerTitle = document.getElementById('header-title');
+  const statsRow = document.getElementById('stats-row');
+  const bodyContent = document.getElementById('body-content');
+  const buttons = document.querySelectorAll('.range-btn');
+
+  const views = {
+    day: {
+      title: 'My day',
+      stats: [
+        { label: 'Assigned today', value: 14, color: 'var(--color-text-info)' },
+        { label: 'Completed', value: 9, color: 'var(--color-text-success)' },
+        { label: 'Remaining', value: 5, color: 'var(--color-text-warning)' }
+      ],
+      body: `
+        <p class="section-label">Up next</p>
+        <div class="task-row">
+          <div class="task-icon blue"><i class="ti ti-flask" aria-hidden="true"></i></div>
+          <div style="flex: 1; min-width: 0;">
+            <p class="task-title">Zone 3 — Slicer line</p>
+            <p class="task-sub">ATP · 8 sample points</p>
+          </div>
+          <span class="task-time">9:30 AM</span>
+        </div>
+        <div class="task-row">
+          <div class="task-icon blue"><i class="ti ti-grid-dots" aria-hidden="true"></i></div>
+          <div style="flex: 1; min-width: 0;">
+            <p class="task-title">Cold storage A</p>
+            <p class="task-sub">Listeria EM · 12 swabs</p>
+          </div>
+          <span class="task-time">11:00 AM</span>
+        </div>
+        <div class="task-row overdue">
+          <div class="task-icon amber"><i class="ti ti-alert-triangle" aria-hidden="true"></i></div>
+          <div style="flex: 1; min-width: 0;">
+            <p class="task-title">Re-test: Drain 4B</p>
+            <p class="task-sub">Follow-up to yesterday's positive</p>
+          </div>
+          <span class="task-overdue">Overdue</span>
+        </div>
+      `
+    },
+    week: {
+      title: 'My week',
+      stats: [
+        { label: 'Assigned this week', value: 52, color: 'var(--color-text-info)' },
+        { label: 'Completed', value: 28, color: 'var(--color-text-success)' },
+        { label: 'Remaining', value: 24, color: 'var(--color-text-warning)' }
+      ],
+      body: `
+        <p class="section-label">This week at a glance</p>
+        <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 1.5rem;">
+          <div class="week-day"><span class="week-day-name">Mon</span><span class="week-day-num">11</span><span class="week-day-count">8 samples</span></div>
+          <div class="week-day"><span class="week-day-name">Tue</span><span class="week-day-num">12</span><span class="week-day-count">10 samples</span></div>
+          <div class="week-day"><span class="week-day-name">Wed</span><span class="week-day-num">13</span><span class="week-day-count">12 samples</span></div>
+          <div class="week-day today"><span class="week-day-name">Thu</span><span class="week-day-num">14</span><span class="week-day-count">14 today</span><span class="week-day-dot"></span></div>
+          <div class="week-day"><span class="week-day-name">Fri</span><span class="week-day-num">15</span><span class="week-day-count">8 samples</span></div>
+        </div>
+        <p class="section-label">Needs attention</p>
+        <div class="task-row overdue">
+          <div class="task-icon amber"><i class="ti ti-alert-triangle" aria-hidden="true"></i></div>
+          <div style="flex: 1; min-width: 0;">
+            <p class="task-title">Re-test: Drain 4B</p>
+            <p class="task-sub">Follow-up to Wed's positive</p>
+          </div>
+          <span class="task-overdue">Overdue</span>
+        </div>
+        <div class="task-row">
+          <div class="task-icon blue"><i class="ti ti-calendar-event" aria-hidden="true"></i></div>
+          <div style="flex: 1; min-width: 0;">
+            <p class="task-title">Heavy day on Wednesday</p>
+            <p class="task-sub">12 samples scheduled · plan accordingly</p>
+          </div>
+        </div>
+      `
+    },
+    month: {
+      title: 'My month',
+      stats: [
+        { label: 'Assigned this month', value: 215, color: 'var(--color-text-info)' },
+        { label: 'Completed', value: 192, color: 'var(--color-text-success)' },
+        { label: 'Remaining', value: 23, color: 'var(--color-text-warning)' }
+      ],
+      body: `
+        <div style="display: flex; gap: 1.5rem; align-items: flex-start; flex-wrap: wrap;">
+          <div style="flex: 0 0 auto;">
+            <p class="section-label">Volume by day</p>
+            <div class="month-mini">
+              ${(() => {
+                const intensities = [0,0,1,2,1,0,0, 2,3,2,3,1,0,0, 1,3,4,2,3,0,0, 2,2,3,4,2,0,0, 1,2,3];
+                const colors = ['var(--color-background-secondary)', '#E6F1FB', '#B5D4F4', '#85B7EB', '#378ADD'];
+                let html = '';
+                for (let i = 0; i < 31; i++) {
+                  const intensity = intensities[i];
+                  const day = i + 1;
+                  const isToday = day === 15;
+                  const isWeekend = (i % 7 === 5) || (i % 7 === 6);
+                  const finalIntensity = isWeekend ? 0 : intensity;
+                  html += `<div class="month-cell" style="background: ${colors[finalIntensity]}; ${isWeekend ? 'opacity: 0.4;' : ''} ${isToday ? 'outline: 2px solid var(--color-border-info); outline-offset: -2px; color: var(--color-text-info); font-weight: 500;' : ''}">${day}</div>`;
+                }
+                return html;
+              })()}
+            </div>
+            <div class="heatmap-legend">
+              <span>Less</span>
+              <div class="legend-swatch" style="background: var(--color-background-secondary);"></div>
+              <div class="legend-swatch" style="background: #B5D4F4;"></div>
+              <div class="legend-swatch" style="background: #378ADD;"></div>
+              <span>More</span>
+            </div>
+          </div>
+          <div style="flex: 1; min-width: 240px;">
+            <p class="section-label">Upcoming this month</p>
+            <div class="task-row">
+              <div class="task-icon blue"><i class="ti ti-calendar-event" aria-hidden="true"></i></div>
+              <div style="flex: 1; min-width: 0;">
+                <p class="task-title">Environmental sweep</p>
+                <p class="task-sub">May 22 · 24 sample points</p>
+              </div>
+            </div>
+            <div class="task-row">
+              <div class="task-icon blue"><i class="ti ti-clipboard-list" aria-hidden="true"></i></div>
+              <div style="flex: 1; min-width: 0;">
+                <p class="task-title">Quarter-end audit prep</p>
+                <p class="task-sub">3 sampling plans · due May 31</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      `
+    }
+  };
+
+  function render(range) {
+    const view = views[range];
+    headerTitle.textContent = view.title;
+    statsRow.innerHTML = view.stats.map(s => `
+      <div class="stat-card">
+        <div class="stat-label" style="color: ${s.color};">${s.label}</div>
+        <div class="stat-number" style="color: ${s.color};">${s.value}</div>
+      </div>
+    `).join('');
+    bodyContent.innerHTML = view.body;
+  }
+
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      buttons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      render(btn.dataset.range);
+    });
+  });
+
+  render('day');
+})();
+</script>
+
+</body>
+</html>

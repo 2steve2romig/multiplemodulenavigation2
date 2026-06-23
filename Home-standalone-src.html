@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <title>SureTrend — Home (redesigned)</title>
+  <link rel="stylesheet" href="grid.css?v=9">
+  <link rel="stylesheet" href="notifications.css?v=1">
+  <link rel="stylesheet" href="home.css?v=18">
+  <link rel="stylesheet" href="iq-launcher.css?v=13">
+  <link rel="stylesheet" href="iq-suite.css?v=11">
+  <link rel="stylesheet" href="home-tiles.css?v=1">
+  <link rel="stylesheet" href="home-role.css?v=8">
+  <link rel="stylesheet" href="news.css?v=1">
+  <link rel="stylesheet" href="import.css?v=1">
+  <link rel="stylesheet" href="ai-chat.css?v=3">
+  <script src="fonts.js"></script>
+  <script>
+    // Asset resolver for standalone-bundled builds. In the live (served) file
+    // there are no ext-resource-dependency meta tags, so RES() returns the
+    // original relative path unchanged. In the bundled file, meta tags + the
+    // bundler's window.__resources map relative paths to inlined blob URLs.
+    window.RES = function (p) {
+      if (!p) return p;
+      var key = String(p).split('?')[0];
+      if (window.__resources) {
+        if (!window.__assetMap) {
+          window.__assetMap = {};
+          var metas = document.querySelectorAll('meta[name="ext-resource-dependency"]');
+          for (var i = 0; i < metas.length; i++) {
+            var c = (metas[i].getAttribute('content') || '').split('?')[0];
+            var id = metas[i].getAttribute('data-resource-id');
+            if (c && id && window.__resources[id]) window.__assetMap[c] = window.__resources[id];
+          }
+        }
+        if (window.__assetMap[key]) return window.__assetMap[key];
+      }
+      return p;
+    };
+  </script>
+  <meta name="ext-resource-dependency" content="assets/iq-icons/iq-atp.png" data-resource-id="iqicon_atp" />
+  <meta name="ext-resource-dependency" content="assets/iq-icons/iq-map.png" data-resource-id="iqicon_map" />
+  <meta name="ext-resource-dependency" content="assets/iq-icons/iq-sample.png" data-resource-id="iqicon_sample" />
+  <meta name="ext-resource-dependency" content="assets/iq-icons/iq-clean.png" data-resource-id="iqicon_clean" />
+  <meta name="ext-resource-dependency" content="assets/iq-icons/iq-plan.png" data-resource-id="iqicon_plan" />
+  <meta name="ext-resource-dependency" content="assets/iq-icons/iq-supplier.png" data-resource-id="iqicon_supplier" />
+  <meta name="ext-resource-dependency" content="assets/iq-icons/iq-lab.png" data-resource-id="iqicon_lab" />
+  <meta name="ext-resource-dependency" content="assets/iq-icons/iq-correct.png" data-resource-id="iqicon_correct" />
+  <meta name="ext-resource-dependency" content="assets/iq-icons/iq-recall.png" data-resource-id="iqicon_recall" />
+  <meta name="ext-resource-dependency" content="assets/iq-icons/iq-trace.png" data-resource-id="iqicon_trace" />
+  <meta name="ext-resource-dependency" content="assets/iq-icons/iq-risk.png" data-resource-id="iqicon_risk" />
+  <meta name="ext-resource-dependency" content="assets/iq-icons/iq-benchmark.png" data-resource-id="iqicon_benchmark" />
+  <meta name="ext-resource-dependency" content="assets/iq-icons/iq-audit.png" data-resource-id="iqicon_audit" />
+  <meta name="ext-resource-dependency" content="assets/iq-icons/iq-report.png" data-resource-id="iqicon_report" />
+  <meta name="ext-resource-dependency" content="assets/pass-icon.png" data-resource-id="pass_icon" />
+  <meta name="ext-resource-dependency" content="assets/fail-icon.png" data-resource-id="fail_icon" />
+  <meta name="ext-resource-dependency" content="assets/caution-icon.png" data-resource-id="caution_icon" />
+  <meta name="ext-resource-dependency" content="assets/suretrend-cloud-logo.png" data-resource-id="suretrend_logo" />
+  <meta name="ext-resource-dependency" content="assets/MapIQ-Logo.png" data-resource-id="mapiq_logo" />
+  <meta name="ext-resource-dependency" content="assets/MapIQ-Logo-white.png" data-resource-id="mapiq_logo_white" />
+  <meta name="ext-resource-dependency" content="assets/dashboard_home.png" data-resource-id="dashboard_home" />
+  <meta name="ext-resource-dependency" content="assets/allergens_icon.png" data-resource-id="allergens_icon" />
+  <meta name="ext-resource-dependency" content="assets/app-icon.png" data-resource-id="app_icon" />
+  <template id="__bundler_thumbnail" data-bg-color="#0F2F58">
+    <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+      <rect width="1200" height="800" fill="#0F2F58"/>
+      <g fill="none" stroke="#29ABE2" stroke-width="10">
+        <rect x="360" y="250" width="480" height="300" rx="16"/>
+        <line x1="360" y1="330" x2="840" y2="330"/>
+      </g>
+      <circle cx="600" cy="455" r="55" fill="none" stroke="#1B8A7A" stroke-width="22"/>
+      <circle cx="600" cy="455" r="55" fill="none" stroke="#29ABE2" stroke-width="22" stroke-dasharray="120 250"/>
+      <text x="600" y="660" fill="#EAF4FB" font-family="Open Sans, sans-serif" font-size="48" font-weight="700" text-anchor="middle">SureTrend Cloud</text>
+    </svg>
+  </template>
+  <style>
+    .topbar .crumb b { color:#29ABE2; }
+  </style>
+</head>
+<body>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <div id="root"></div>
+
+  <script>
+    // Tell App.jsx to default to the Home route on first load.
+    window.__DEFAULT_ROUTE__ = "home";
+    try { localStorage.removeItem("route"); } catch(e) {}
+  </script>
+
+  <script src="data.js"></script>
+  <script src="iq-catalog.js"></script>
+  <script src="iq-subscriptions.js"></script>
+  <script type="text/babel" src="Icons.jsx" data-filename="Icons.jsx"></script>
+  <script type="text/babel" src="IQLauncher.jsx" data-filename="IQLauncher.jsx"></script>
+  <script type="text/babel" src="Sidebar.jsx" data-filename="Sidebar.jsx"></script>
+  <script type="text/babel" src="Topbar.jsx" data-filename="Topbar.jsx"></script>
+  <script type="text/babel" src="tweaks-panel.jsx" data-filename="tweaks-panel.jsx"></script>
+  <script type="text/babel" src="SummaryHeader.jsx" data-filename="SummaryHeader.jsx"></script>
+  <script type="text/babel" src="IQMenu.jsx" data-filename="IQMenu.jsx"></script>
+  <script type="text/babel" src="FilterDropdowns.jsx" data-filename="FilterDropdowns.jsx"></script>
+  <script type="text/babel" src="ResultsGrid.jsx" data-filename="ResultsGrid.jsx"></script>
+  <script type="text/babel" src="NotificationsInbox.jsx" data-filename="NotificationsInbox.jsx"></script>
+  <script type="text/babel" src="AIChat.jsx" data-filename="AIChat.jsx"></script>
+  <script type="text/babel" src="Home.jsx" data-filename="Home.jsx"></script>
+  <script type="text/babel" src="HomeTiles.jsx" data-filename="HomeTiles.jsx"></script>
+  <script type="text/babel" src="HomeRole.jsx" data-filename="HomeRole.jsx"></script>
+  <script type="text/babel" src="HomeTech.jsx" data-filename="HomeTech.jsx"></script>
+  <script type="text/babel" src="HomeAdmin.jsx" data-filename="HomeAdmin.jsx"></script>
+  <script type="text/babel" src="NewsPage.jsx" data-filename="NewsPage.jsx"></script>
+  <script type="text/babel" src="ImportManager.jsx" data-filename="ImportManager.jsx"></script>
+  <script type="text/babel" src="IQSuiteView.jsx" data-filename="IQSuiteView.jsx"></script>
+  <script type="text/babel" src="IQAppView.jsx" data-filename="IQAppView.jsx"></script>
+  <script type="text/babel" src="IQSwitcher.jsx" data-filename="IQSwitcher.jsx"></script>
+  <script type="text/babel" src="IQLearn.jsx" data-filename="IQLearn.jsx"></script>
+  <script type="text/babel" src="ModuleSubscriptions.jsx" data-filename="ModuleSubscriptions.jsx"></script>
+  <script type="text/babel" src="ModuleAccess.jsx" data-filename="ModuleAccess.jsx"></script>
+  <script type="text/babel" src="App.jsx" data-filename="App.jsx"></script>
+</body>
+</html>

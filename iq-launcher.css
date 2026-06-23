@@ -1,0 +1,398 @@
+/* ============================================================= */
+/* IQ Suite launcher — rail button + anchored panel              */
+/* ============================================================= */
+
+/* ---- Rail button (top of sidebar, above Home) --------------- */
+.sb-iq-launch {
+  display: flex; align-items: center; gap: 10px;
+  width: calc(100% - 20px);
+  margin: 8px 10px 6px;
+  padding: 9px 12px;
+  border: 0;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font: 600 13px/1 "Open Sans", sans-serif;
+  letter-spacing: .01em;
+  cursor: pointer;
+  text-align: left;
+  position: relative;
+  transition: background .14s ease, box-shadow .14s ease;
+}
+.sb-iq-launch:hover { background: rgba(255, 255, 255, 0.22); }
+.sb-iq-launch.open {
+  background: #fff;
+  color: #0D6A99;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+}
+.sb-iq-launch svg { flex-shrink: 0; }
+.sb-iq-launch img { flex-shrink: 0; }
+/* White PNG icon → tint dark when the panel is open (white bg) */
+.sb-iq-launch.open img { filter: brightness(0) saturate(100%) invert(28%) sepia(72%) saturate(1600%) hue-rotate(178deg) brightness(92%) contrast(95%); }
+.sb-iq-launch-label { white-space: nowrap; }
+
+/* Collapsed rail: icon-only, centered, with the shared hover tooltip */
+.sidebar.collapsed .sb-iq-launch {
+  width: 40px; height: 40px;
+  margin: 8px auto 6px;
+  padding: 0;
+  justify-content: center;
+}
+.sidebar.collapsed .sb-iq-launch .sb-iq-launch-label { display: none; }
+.sidebar.collapsed .sb-iq-launch[data-tip]::after {
+  content: attr(data-tip);
+  position: absolute; left: calc(100% + 10px); top: 50%;
+  transform: translateY(-50%);
+  background: #1A1A1A; color: #fff;
+  font: 600 12px/1 "Open Sans", sans-serif;
+  padding: 6px 9px; border-radius: 6px; white-space: nowrap;
+  opacity: 0; pointer-events: none; transition: opacity .14s ease;
+  z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,.2);
+}
+.sidebar.collapsed .sb-iq-launch:hover::after { opacity: 1; }
+/* Suppress the tooltip while the menu is open (panel would overlap it). */
+.sidebar.collapsed .sb-iq-launch.open::after { opacity: 0 !important; }
+
+/* Thin separator under the launcher so it reads as its own zone */
+.sb-iq-sep {
+  height: 1px;
+  margin: 4px 14px 6px;
+  background: rgba(255, 255, 255, 0.18);
+}
+.sidebar.collapsed .sb-iq-sep { margin: 4px 14px 6px; }
+
+/* ---- Anchored panel ----------------------------------------- */
+.iql-panel {
+  position: fixed;
+  z-index: 9999;
+  width: 560px;
+  max-width: calc(100vw - 120px);
+  max-height: calc(100vh - 32px);
+  display: flex;
+  flex-direction: column;
+  background: #FFFFFF;
+  border: 1px solid #E6E9ED;
+  border-radius: 16px;
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.6) inset,
+    0 18px 48px rgba(13, 32, 48, 0.18),
+    0 4px 14px rgba(13, 32, 48, 0.10);
+  padding: 16px 16px 8px;
+  animation: iql-pop 150ms cubic-bezier(.2,.7,.3,1);
+  transform-origin: top left;
+  font-family: "Open Sans", sans-serif;
+}
+@keyframes iql-pop {
+  from { opacity: 0; transform: translateY(-6px) scale(.985); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ---- Search ------------------------------------------------- */
+.iql-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.iql-top .iql-search { flex: 1; margin-bottom: 0; }
+.iql-close {
+  flex: 0 0 auto;
+  width: 38px; height: 38px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 10px;
+  border: 1px solid #E6E9ED;
+  background: #fff;
+  color: #6B7785;
+  cursor: pointer;
+  transition: background .14s ease, color .14s ease, border-color .14s ease;
+}
+.iql-close:hover { background: #F2F4F6; color: #1A2530; border-color: #D6DBE0; }
+.iql-close:active { background: #E8EBEE; }
+.iql-search {
+  position: relative;
+  display: flex; align-items: center;
+  margin-bottom: 14px;
+}
+.iql-search-icon {
+  position: absolute; left: 14px; color: #98A2AE; pointer-events: none;
+}
+.iql-search-input {
+  width: 100%;
+  font: 400 15px/1.2 "Open Sans", sans-serif;
+  color: #1A2530;
+  padding: 12px 40px 12px 44px;
+  border: 1px solid #E2E6EB;
+  border-radius: 11px;
+  background: #F7F9FB;
+  transition: border-color .14s ease, box-shadow .14s ease, background .14s ease;
+}
+.iql-search-input::placeholder { color: #9AA4AF; }
+.iql-search-input:focus {
+  outline: none;
+  background: #fff;
+  border-color: #29ABE2;
+  box-shadow: 0 0 0 3px rgba(41,171,226,.18);
+}
+.iql-search-clear {
+  position: absolute; right: 10px;
+  width: 24px; height: 24px;
+  display: flex; align-items: center; justify-content: center;
+  border: 0; border-radius: 6px; background: transparent;
+  color: #98A2AE; cursor: pointer;
+}
+.iql-search-clear:hover { background: #EEF1F4; color: #5B6672; }
+
+/* ---- Category tabs ------------------------------------------ */
+.iql-tabs { display: flex; gap: 7px; margin-bottom: 14px; flex-wrap: wrap; }
+.iql-tab {
+  display: inline-flex; align-items: center; gap: 7px;
+  border: 1px solid #E2E6EB; background: #fff; color: #4A5560;
+  font: 600 12.5px/1 "Open Sans", sans-serif; padding: 8px 12px; border-radius: 999px; cursor: pointer;
+  transition: border-color .14s ease, background .14s ease, color .14s ease;
+}
+.iql-tab:hover { border-color: #CDD4DC; background: #FAFBFC; }
+.iql-tab.is-active { background: #0D6A99; border-color: #0D6A99; color: #fff; }
+.iql-tab-count { font: 700 10.5px/1 "Open Sans", sans-serif; padding: 2px 6px; border-radius: 999px; background: rgba(0,0,0,.07); color: inherit; }
+
+/* ---- Workflow filter toolbar -------------------------------- */
+.iql-toolbar {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.iql-title { font: 700 18px/1 "Open Sans", sans-serif; color: #16222E; letter-spacing: -.01em; }
+.iql-toolbar-label {
+  margin-right: auto;
+  font: 600 12px/1 "Open Sans", sans-serif;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: #9AA4AF;
+}
+.iql-wf { position: relative; flex-shrink: 0; }
+.iql-wf-trigger {
+  display: inline-flex; align-items: center; gap: 6px;
+  border: 0;
+  background: transparent;
+  color: #6B7682;
+  font: 600 13px/1 "Open Sans", sans-serif;
+  padding: 6px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background .14s ease, color .14s ease;
+}
+.iql-wf-trigger:hover { background: #F1F4F7; color: #2A3540; }
+.iql-wf.open .iql-wf-trigger { background: #F1F4F7; color: #2A3540; }
+.iql-wf-icon { color: #AEB6BF; flex-shrink: 0; }
+.iql-wf-label { color: #9AA4AF; font-weight: 600; }
+.iql-wf-value { color: #2A3540; font-weight: 700; }
+.iql-wf-chev { color: #AEB6BF; transition: transform .16s ease; flex-shrink: 0; }
+.iql-wf.open .iql-wf-chev { transform: rotate(180deg); }
+.iql-wf-pop {
+  position: absolute;
+  top: calc(100% + 6px); right: 0;
+  min-width: 190px;
+  background: #fff;
+  border: 1px solid #E6E9ED;
+  border-radius: 12px;
+  box-shadow: 0 14px 34px rgba(13, 32, 48, 0.16);
+  padding: 6px;
+  z-index: 20;
+  animation: iql-pop 130ms cubic-bezier(.2,.7,.3,1);
+}
+.iql-wf-opt {
+  width: 100%;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  border: 0;
+  background: transparent;
+  color: #2A3540;
+  font: 600 13.5px/1.1 "Open Sans", sans-serif;
+  text-align: left;
+  padding: 10px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background .12s ease, color .12s ease;
+}
+.iql-wf-opt:hover { background: #F1F4F7; }
+.iql-wf-opt.selected { color: #1E8FBF; background: #EAF6FC; }
+.iql-wf-opt-check { color: #29ABE2; flex-shrink: 0; }
+
+.iql-sort { position: relative; flex-shrink: 0; }
+.iql-sort-trigger {
+  display: inline-flex; align-items: center; gap: 7px;
+  border: 1px solid #E2E6EB;
+  background: #fff;
+  color: #4A5560;
+  font: 600 12.5px/1 "Open Sans", sans-serif;
+  padding: 8px 11px;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: border-color .14s ease, background .14s ease;
+}
+.iql-sort-trigger:hover { border-color: #CDD4DC; background: #FAFBFC; }
+.iql-sort-val { color: #1A2530; }
+.iql-sort-chev { color: #98A2AE; }
+.iql-sort.open .iql-sort-chev { transform: rotate(180deg); }
+.iql-sort-pop {
+  position: absolute; top: calc(100% + 6px); right: 0;
+  background: #fff;
+  border: 1px solid #E6E9ED;
+  border-radius: 10px;
+  box-shadow: 0 10px 28px rgba(13, 32, 48, 0.14);
+  padding: 6px;
+  min-width: 140px;
+  z-index: 5;
+  animation: iql-pop 130ms cubic-bezier(.2,.7,.3,1);
+}
+.iql-sort-opt {
+  display: flex; align-items: center; justify-content: space-between;
+  width: 100%;
+  border: 0; background: transparent;
+  font: 500 13px/1 "Open Sans", sans-serif;
+  color: #2A3540;
+  padding: 9px 10px; border-radius: 7px;
+  cursor: pointer;
+}
+.iql-sort-opt:hover { background: #F1F4F7; }
+.iql-sort-opt.selected { color: #1E8FBF; font-weight: 600; }
+
+/* ---- Grid of IQ cards --------------------------------------- */
+.iql-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  overflow-y: auto;
+  padding: 2px 2px 4px;
+  margin: 0 -2px;
+}
+.iql-grid::-webkit-scrollbar { width: 8px; }
+.iql-grid::-webkit-scrollbar-thumb { background: #DCE2E8; border-radius: 8px; }
+
+.iql-card {
+  position: relative;
+  display: flex; align-items: center; gap: 13px;
+  text-align: left;
+  padding: 13px 14px;
+  border: 1px solid #E7EAEE;
+  border-radius: 12px;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color .14s ease, box-shadow .14s ease, transform .14s ease;
+}
+.iql-card:hover {
+  border-color: #29ABE2;
+  box-shadow: 0 6px 16px rgba(13, 32, 48, 0.09);
+  transform: translateY(-1px);
+}
+.iql-card.selected {
+  border-color: #29ABE2;
+  box-shadow: 0 0 0 1px #29ABE2 inset, 0 6px 16px rgba(13, 32, 48, 0.08);
+  background: color-mix(in srgb, #29ABE2 5%, #fff);
+}
+
+.iql-icon {
+  flex-shrink: 0;
+  width: 42px; height: 42px;
+  object-fit: contain;
+  display: block;
+  user-select: none;
+  filter: drop-shadow(0 2px 5px rgba(13, 32, 48, 0.18));
+}
+
+.iql-badge {
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+  width: 42px; height: 42px;
+  border-radius: 12px;
+  display: flex; align-items: flex-start; justify-content: flex-start;
+  padding: 6px 0 0 7px;
+  background:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--iql-accent, #29ABE2) 90%, #fff) 0%,
+      var(--iql-accent, #29ABE2) 52%,
+      color-mix(in srgb, var(--iql-accent, #29ABE2) 92%, #000) 100%);
+  box-shadow:
+    0 2px 6px rgba(13, 32, 48, 0.18),
+    inset 0 1px 0 rgba(255,255,255,.28);
+}
+/* lighter diagonal corner (lower-right two-tone wedge) */
+.iql-badge::after {
+  content: "";
+  position: absolute; inset: 0;
+  background: rgba(255,255,255,.30);
+  clip-path: polygon(118% 14%, 118% 118%, 6% 118%);
+  pointer-events: none;
+}
+/* soft gloss sheen across the top */
+.iql-badge::before {
+  content: "";
+  position: absolute; left: 0; right: 0; top: 0; height: 58%;
+  background: linear-gradient(180deg, rgba(255,255,255,.32), rgba(255,255,255,0));
+  pointer-events: none;
+}
+.iql-badge-iq {
+  position: relative;
+  z-index: 1;
+  color: #fff;
+  font: 800 15px/1 "Open Sans", sans-serif;
+  letter-spacing: -.02em;
+  text-shadow: 0 1px 1.5px rgba(0,0,0,.18);
+}
+
+.iql-card-body { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.iql-card-name {
+  font: 700 15px/1.15 "Open Sans", sans-serif;
+  color: #1A2530;
+}
+.iql-card-desc {
+  font: 400 12.5px/1.25 "Open Sans", sans-serif;
+  color: #6B7682;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.iql-card-check {
+  position: absolute; top: 10px; right: 10px;
+  width: 20px; height: 20px; border-radius: 999px;
+  display: flex; align-items: center; justify-content: center;
+  background: #29ABE2;
+  color: #fff;
+  opacity: 0; transform: scale(.6);
+  transition: opacity .14s ease, transform .14s ease;
+}
+.iql-card.selected .iql-card-check { opacity: 1; transform: scale(1); }
+
+/* Licensing state: full-color = licensed, grayscale + lock = not licensed */
+.iql-iconwrap { position: relative; flex-shrink: 0; display: inline-flex; }
+.iql-lock { position: absolute; right: -5px; bottom: -5px; width: 22px; height: 22px; border-radius: 999px; background: #5B6672; color: #fff; display: inline-flex; align-items: center; justify-content: center; border: 2px solid #fff; }
+.iql-card-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.iql-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: #8A95A1;
+  font: 400 13.5px/1.4 "Open Sans", sans-serif;
+  padding: 28px 0;
+}
+
+/* ---- Footer ------------------------------------------------- */
+.iql-foot {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #F0F2F5;
+}
+.iql-foot-link {
+  display: inline-flex; align-items: center; gap: 9px;
+  border: 0; background: transparent;
+  color: #1E8FBF;
+  font: 700 13.5px/1 "Open Sans", sans-serif;
+  padding: 8px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.iql-foot-link:hover { background: rgba(41,171,226,.08); }
+
+/* ---- Dark mode (panel stays light for badge contrast) ------- */
+html[data-theme="dark"] .iql-panel {
+  border-color: #2A3340;
+  box-shadow: 0 18px 48px rgba(0,0,0,.5), 0 4px 14px rgba(0,0,0,.4);
+}

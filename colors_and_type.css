@@ -1,0 +1,162 @@
+/* ==========================================================================
+   SureTrend (Hygiena) — Colors & Type
+   Extracted from the SureTrend design system reference.
+   ========================================================================== */
+
+/* Fonts are loaded from Google Fonts (Open Sans + Roboto).
+   If you have the licensed Hygiena / SureTrend TTFs, drop them in /fonts and
+   swap the @font-face below. */
+@import url("https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&family=Roboto:wght@400;500;700&display=swap");
+
+:root {
+  /* ---- Primary blues ---------------------------------------------------- */
+  --st-sky-blue:    #29ABE2; /* brand primary */
+  --st-deep-blue:   #1E8FBF; /* hover / pressed primary */
+  --st-nav-blue:    #0D6A99; /* sidebar / headers */
+  --st-blue-tint:   #E8F7FD; /* subtle fill, input background */
+
+  /* ---- Accent / interactive -------------------------------------------- */
+  --st-purple:      #5B4FA8;
+  --st-orange:      #E8662A;
+  --st-teal:        #2196A8;
+
+  /* ---- Semantic --------------------------------------------------------- */
+  --st-pass:        #4CAF50;
+  --st-fail:        #F44336;
+  --st-caution:     #FFC107;
+  --st-pass-bg:     #E8F5E9;
+  --st-fail-bg:     #FDECEA;
+  --st-caution-bg:  #FFF8E1;
+
+  /* ---- Neutrals --------------------------------------------------------- */
+  --st-white:       #FFFFFF;
+  --st-page-bg:     #F5F5F5;
+  --st-border:      #E0E0E0;
+  --st-text-muted:  #757575;
+  --st-text:        #1A1A1A;
+
+  /* ---- Semantic tokens -------------------------------------------------- */
+  --color-bg:          var(--st-page-bg);
+  --color-surface:     var(--st-white);
+  --color-surface-alt: var(--st-blue-tint);
+  --color-border:      var(--st-border);
+  --color-primary:     var(--st-sky-blue);
+  --color-primary-hover: var(--st-deep-blue);
+  --color-primary-dark:  var(--st-nav-blue);
+  --color-fg:          var(--st-text);
+  --color-fg-muted:    var(--st-text-muted);
+  --color-fg-on-primary: var(--st-white);
+  --color-link:        var(--st-sky-blue);
+
+  /* ---- Type ------------------------------------------------------------- */
+  --font-sans: "Open Sans", "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  --font-mono: "Roboto Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  /* Type scale (px) */
+  --fs-display: 32px;   /* display headlines */
+  --fs-h1:      24px;
+  --fs-h2:      18px;
+  --fs-body:    14px;
+  --fs-nav:     13px;
+  --fs-cell:    13px;
+  --fs-caption: 11px;
+
+  --fw-regular: 400;
+  --fw-medium:  500;
+  --fw-semibold:600;
+  --fw-bold:    700;
+  --fw-black:   800;
+
+  --lh-tight: 1.2;
+  --lh-snug:  1.35;
+  --lh-body:  1.5;
+
+  /* ---- Spacing scale ---------------------------------------------------- */
+  --sp-1:  4px;
+  --sp-2:  8px;
+  --sp-3:  12px;
+  --sp-4:  16px;
+  --sp-6:  24px;
+  --sp-8:  32px;
+  --sp-12: 48px;
+
+  /* ---- Radius ----------------------------------------------------------- */
+  --r-0:    0px;   /* table cells, dense rows */
+  --r-sm:   4px;   /* inputs */
+  --r-md:   6px;   /* nav items */
+  --r-lg:   8px;   /* cards, buttons */
+  --r-pill: 999px; /* badges */
+
+  /* ---- Borders ---------------------------------------------------------- */
+  --border-hairline: 1px solid var(--color-border);
+  --border-card:     1px solid var(--color-border);
+  --border-icon:     1.5px solid currentColor;
+
+  /* ---- Elevation / shadow ---------------------------------------------- */
+  --shadow-xs: 0 1px 0 rgba(0,0,0,.04);
+  --shadow-sm: 0 1px 2px rgba(13,106,153,.06), 0 1px 1px rgba(0,0,0,.04);
+  --shadow-md: 0 2px 6px rgba(13,106,153,.08), 0 1px 2px rgba(0,0,0,.06);
+  --shadow-lg: 0 8px 24px rgba(13,106,153,.12);
+  --ring-focus: 0 0 0 3px rgba(41,171,226,.3);
+}
+
+/* ==========================================================================
+   Semantic element styles
+   ========================================================================== */
+
+html { font-family: var(--font-sans); color: var(--color-fg); background: var(--color-bg); }
+body { margin: 0; font-size: var(--fs-body); line-height: var(--lh-body); }
+
+.st-display, h1.display {
+  font-size: var(--fs-display);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-tight);
+  letter-spacing: -0.01em;
+  color: var(--color-fg);
+}
+
+h1, .st-h1 {
+  font-size: var(--fs-h1);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-snug);
+  color: var(--color-primary);
+  margin: 0;
+}
+
+h2, .st-h2 {
+  font-size: var(--fs-h2);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-snug);
+  color: var(--color-fg);
+  margin: 0;
+}
+
+p, .st-body {
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--color-fg);
+}
+
+.st-nav {
+  font-size: var(--fs-nav);
+  font-weight: var(--fw-regular);
+}
+
+.st-cell {
+  font-size: var(--fs-cell);
+  font-weight: var(--fw-regular);
+  color: var(--color-fg);
+}
+
+.st-caption, small {
+  font-size: var(--fs-caption);
+  color: var(--color-fg-muted);
+}
+
+a, .st-link {
+  color: var(--color-link);
+  text-decoration: none;
+}
+a:hover { color: var(--color-primary-hover); text-decoration: underline; }
+
+code, kbd, samp { font-family: var(--font-mono); font-size: 0.9em; }

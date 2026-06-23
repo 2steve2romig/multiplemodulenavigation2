@@ -1,0 +1,423 @@
+/* =============================================================
+   Import Manager — landing grid + step wizards + history
+   Built on the SureTrend tokens (sky blue #29ABE2, Open Sans).
+   ============================================================= */
+
+.imp-page {
+  position: relative;
+  padding: 24px 28px 48px;
+  background: #FFFFFF;
+  min-height: 100%;
+  display: flex; flex-direction: column;
+  gap: 22px;
+}
+
+/* ---- Page header --------------------------------------------------------- */
+.imp-close {
+  position: absolute; top: 20px; right: 26px; z-index: 5;
+  width: 38px; height: 38px; border-radius: 10px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: #FFFFFF; border: 1px solid #E5E9EE; color: #5B6B7B;
+  cursor: pointer; box-shadow: 0 1px 2px rgba(13,32,48,.04);
+  transition: background .14s ease, color .14s ease, border-color .14s ease;
+}
+.imp-close:hover { background: #F3F6F9; color: #102A40; border-color: #CBD7E2; }
+.imp-close svg { width: 18px; height: 18px; }
+
+.imp-head { display: flex; flex-direction: column; gap: 4px; }
+.imp-eyebrow {
+  font-size: 11px; font-weight: 700; letter-spacing: .14em;
+  text-transform: uppercase; color: #29ABE2;
+}
+.imp-title {
+  margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -.01em;
+  color: #102A40;
+}
+.imp-sub { margin: 0; font-size: 14px; color: #5B6B7B; max-width: 70ch; text-wrap: pretty; }
+
+/* =============================================================
+   LANDING — grouped cards
+   ============================================================= */
+.imp-group { display: flex; flex-direction: column; gap: 12px; }
+.imp-group-label {
+  font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  color: #8194A5;
+}
+.imp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.imp-card {
+  position: relative;
+  display: flex; align-items: flex-start; gap: 14px;
+  text-align: left;
+  background: #FFFFFF;
+  border: 1px solid #E5E9EE;
+  border-radius: 14px;
+  padding: 18px 18px 18px 16px;
+  cursor: pointer;
+  font: inherit;
+  box-shadow: 0 1px 2px rgba(13,32,48,.04);
+  transition: transform .14s ease, box-shadow .16s ease, border-color .16s ease;
+}
+.imp-card::before {
+  content: ""; position: absolute; left: 0; top: 14px; bottom: 14px;
+  width: 3px; border-radius: 0 3px 3px 0;
+  background: var(--imp-accent, #29ABE2);
+  opacity: 0; transition: opacity .16s ease;
+}
+.imp-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--imp-accent, #BFE3F4);
+  box-shadow: 0 10px 26px -12px rgba(15,39,68,.28), 0 2px 6px rgba(15,39,68,.06);
+}
+.imp-card:hover::before { opacity: 1; }
+
+.imp-card-icon {
+  flex-shrink: 0;
+  width: 46px; height: 46px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 12px;
+  color: #fff;
+  background: var(--imp-accent, #29ABE2);
+}
+.imp-card-icon svg { width: 24px; height: 24px; }
+.imp-card-icon .imp-png-icon { width: 26px; height: 26px; object-fit: contain; }
+
+.imp-card-body { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.imp-card-title { font-size: 15px; font-weight: 700; color: #16293A; line-height: 1.25; }
+.imp-card-desc { font-size: 12.5px; color: #64748B; line-height: 1.45; text-wrap: pretty; }
+.imp-card-meta {
+  margin-top: 7px;
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 600; color: #94A3B4;
+}
+.imp-card-meta .dot { width: 4px; height: 4px; border-radius: 999px; background: #CBD5E1; }
+
+.imp-card-go {
+  position: absolute; top: 16px; right: 14px;
+  color: #C3CEDA; transition: transform .16s ease, color .16s ease;
+}
+.imp-card:hover .imp-card-go { color: var(--imp-accent, #29ABE2); transform: translateX(3px); }
+
+/* =============================================================
+   WIZARD VIEW
+   ============================================================= */
+.imp-back {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: transparent; border: 0; padding: 6px 0;
+  font: inherit; font-size: 13px; font-weight: 600; color: #5B6B7B;
+  cursor: pointer; align-self: flex-start;
+}
+.imp-back:hover { color: #29ABE2; }
+.imp-back svg { width: 16px; height: 16px; }
+
+.imp-wiz-head {
+  display: flex; align-items: center; gap: 16px;
+}
+.imp-wiz-icon {
+  flex-shrink: 0;
+  width: 56px; height: 56px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 14px; color: #fff;
+  background: var(--imp-accent, #29ABE2);
+  box-shadow: 0 8px 20px -8px var(--imp-accent, #29ABE2);
+}
+.imp-wiz-icon svg { width: 28px; height: 28px; }
+.imp-wiz-icon .imp-png-icon { width: 30px; height: 30px; object-fit: contain; }
+.imp-wiz-htext { display: flex; flex-direction: column; gap: 3px; }
+.imp-wiz-htext h2 { margin: 0; font-size: 21px; font-weight: 800; color: #102A40; letter-spacing: -.01em; }
+.imp-wiz-htext p { margin: 0; font-size: 13.5px; color: #5B6B7B; max-width: 72ch; text-wrap: pretty; }
+
+/* ---- Stepper card -------------------------------------------------------- */
+.imp-wiz-card {
+  background: #FFFFFF;
+  border: 1px solid #E5E9EE;
+  border-radius: 16px;
+  box-shadow: 0 1px 2px rgba(13,32,48,.04), 0 8px 24px -16px rgba(15,39,68,.16);
+  padding: 8px 26px 24px;
+}
+
+.imp-steps { list-style: none; margin: 0; padding: 0; }
+.imp-step {
+  position: relative;
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  gap: 16px;
+  padding: 20px 0;
+  border-bottom: 1px solid #F0F2F5;
+}
+.imp-step:last-child { border-bottom: 0; }
+
+/* connector line */
+.imp-step::before {
+  content: ""; position: absolute;
+  left: 16px; top: 44px; bottom: -1px;
+  width: 2px; background: #E5E9EE;
+}
+.imp-step:last-child::before { display: none; }
+.imp-step.done::before { background: #29ABE2; }
+
+.imp-step-num {
+  width: 34px; height: 34px; border-radius: 999px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 800;
+  background: #EEF2F6; color: #8194A5;
+  border: 2px solid #FFFFFF;
+  box-shadow: 0 0 0 1px #E0E6EC;
+  z-index: 1;
+  transition: background .18s ease, color .18s ease, box-shadow .18s ease;
+}
+.imp-step.active .imp-step-num { background: #29ABE2; color: #fff; box-shadow: 0 0 0 1px #29ABE2, 0 0 0 4px rgba(41,171,226,.18); }
+.imp-step.done .imp-step-num { background: #29ABE2; color: #fff; box-shadow: 0 0 0 1px #29ABE2; }
+.imp-step-num svg { width: 17px; height: 17px; }
+
+.imp-step-main { min-width: 0; padding-top: 4px; }
+.imp-step-label { font-size: 14.5px; font-weight: 700; color: #1E3346; line-height: 1.3; }
+.imp-step-hint { font-size: 12.5px; color: #6B7B8C; margin-top: 3px; text-wrap: pretty; }
+.imp-step-control { margin-top: 12px; }
+
+.imp-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+/* ---- Buttons specific ---------------------------------------------------- */
+.imp-dl-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.imp-dl-btn svg { width: 16px; height: 16px; }
+.imp-done-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 700; color: #1F8A3B;
+  background: #E8F5EC; border: 1px solid #BBE3C6;
+  padding: 5px 10px; border-radius: 999px;
+}
+.imp-done-pill svg { width: 13px; height: 13px; }
+
+/* ---- Custom dropdown ----------------------------------------------------- */
+.imp-dd { position: relative; display: inline-block; min-width: 260px; }
+.imp-dd.full { display: block; width: 100%; max-width: 360px; }
+.imp-dd-trigger {
+  width: 100%;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  height: 40px; padding: 0 12px;
+  background: #FFFFFF; border: 1.5px solid #D7DEE6; border-radius: 8px;
+  font: inherit; font-size: 13.5px; color: #1E3346; cursor: pointer;
+  transition: border-color .14s ease, box-shadow .14s ease;
+}
+.imp-dd-trigger:hover { border-color: #9FB3C6; }
+.imp-dd.open .imp-dd-trigger { border-color: #29ABE2; box-shadow: 0 0 0 3px rgba(41,171,226,.18); }
+.imp-dd-trigger.placeholder { color: #9AA8B6; }
+.imp-dd-trigger svg { width: 14px; height: 14px; color: #7A8A99; flex-shrink: 0; transition: transform .16s ease; }
+.imp-dd.open .imp-dd-trigger svg { transform: rotate(180deg); }
+
+.imp-dd-pop {
+  position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+  background: #FFFFFF; border: 1px solid #E0E6EC; border-radius: 10px;
+  box-shadow: 0 14px 34px -10px rgba(15,39,68,.22), 0 4px 10px rgba(15,39,68,.06);
+  padding: 5px; z-index: 60; max-height: 280px; overflow: auto;
+  animation: imp-pop-in .14s ease-out;
+}
+@keyframes imp-pop-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+.imp-dd-opt {
+  width: 100%; text-align: left;
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 10px; border: 0; background: transparent;
+  font: inherit; font-size: 13.5px; color: #1E3346; cursor: pointer; border-radius: 7px;
+}
+.imp-dd-opt:hover { background: #F0F8FC; }
+.imp-dd-opt.sel { background: #E8F7FD; color: #0D6A99; font-weight: 600; }
+.imp-dd-opt .imp-dd-check { margin-left: auto; color: #29ABE2; width: 15px; height: 15px; }
+
+/* ---- Checkbox ------------------------------------------------------------ */
+.imp-check {
+  display: inline-flex; align-items: center; gap: 10px; cursor: pointer;
+  font-size: 13.5px; color: #1E3346;
+}
+.imp-check input { position: absolute; opacity: 0; pointer-events: none; }
+.imp-check-box {
+  width: 20px; height: 20px; border-radius: 6px;
+  border: 1.5px solid #C2CCD6; background: #fff;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: #fff; flex-shrink: 0;
+  transition: background .14s ease, border-color .14s ease;
+}
+.imp-check input:checked + .imp-check-box { background: #29ABE2; border-color: #29ABE2; }
+.imp-check-box svg { width: 13px; height: 13px; opacity: 0; transition: opacity .12s ease; }
+.imp-check input:checked + .imp-check-box svg { opacity: 1; }
+.imp-check-sub { font-size: 12px; color: #7A8A99; margin-top: 2px; }
+
+/* ---- Dropzone ------------------------------------------------------------ */
+.imp-drop {
+  border: 2px dashed #CBD7E2; border-radius: 12px;
+  background: #FAFCFE;
+  padding: 28px 20px; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  transition: border-color .14s ease, background .14s ease;
+  max-width: 460px;
+}
+.imp-drop.disabled { opacity: .55; pointer-events: none; }
+.imp-drop.over, .imp-drop:hover:not(.disabled) { border-color: #29ABE2; background: #F0FAFE; }
+.imp-drop-ic { width: 40px; height: 40px; color: #29ABE2; }
+.imp-drop-ic svg { width: 40px; height: 40px; }
+.imp-drop-title { font-size: 14px; font-weight: 700; color: #1E3346; }
+.imp-drop-title .imp-link { color: #29ABE2; cursor: pointer; text-decoration: underline; }
+.imp-drop-sub { font-size: 12px; color: #8194A5; }
+
+.imp-file-chip {
+  display: inline-flex; align-items: center; gap: 10px;
+  background: #E8F7FD; border: 1px solid #BFE3F4; border-radius: 10px;
+  padding: 10px 12px; max-width: 460px;
+}
+.imp-file-chip .fc-ic { width: 30px; height: 30px; border-radius: 7px; background: #29ABE2; color: #fff; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.imp-file-chip .fc-ic svg { width: 16px; height: 16px; }
+.imp-file-chip .fc-name { font-size: 13px; font-weight: 600; color: #0D5375; }
+.imp-file-chip .fc-size { font-size: 11px; color: #5B8BA6; }
+.imp-file-chip .fc-x { margin-left: 8px; background: transparent; border: 0; color: #5B8BA6; cursor: pointer; padding: 4px; border-radius: 6px; display: inline-flex; }
+.imp-file-chip .fc-x:hover { background: #D2EEF9; color: #0D5375; }
+.imp-file-chip .fc-x svg { width: 14px; height: 14px; }
+
+/* ---- Wizard footer ------------------------------------------------------- */
+.imp-wiz-foot {
+  display: flex; align-items: center; gap: 12px;
+  margin-top: 22px; padding-top: 18px; border-top: 1px solid #F0F2F5;
+}
+.imp-wiz-foot .spacer { flex: 1; }
+.btn.is-disabled, .btn:disabled { opacity: .45; cursor: not-allowed; }
+
+/* ---- History table ------------------------------------------------------- */
+.imp-history { display: flex; flex-direction: column; gap: 12px; margin-top: 6px; }
+.imp-history-head { display: flex; align-items: baseline; gap: 10px; }
+.imp-history-title { font-size: 15px; font-weight: 700; color: #16293A; }
+.imp-history-count { font-size: 12px; color: #8194A5; }
+
+.imp-table-wrap {
+  border: 1px solid #E5E9EE; border-radius: 12px; overflow: hidden;
+  background: #fff;
+}
+.imp-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.imp-table thead th {
+  text-align: left; font-weight: 700; color: #64748B; font-size: 11.5px;
+  letter-spacing: .03em; text-transform: uppercase;
+  padding: 11px 16px; background: #F7F9FB; border-bottom: 1px solid #E5E9EE;
+  white-space: nowrap;
+}
+.imp-table tbody td { padding: 12px 16px; color: #2B3B4A; border-bottom: 1px solid #F1F4F7; vertical-align: middle; }
+.imp-table tbody tr:last-child td { border-bottom: 0; }
+.imp-table tbody tr:hover { background: #FAFCFE; }
+.imp-table .col-file { font-weight: 600; color: #16293A; }
+.imp-table .lnk { color: #29ABE2; font-weight: 600; cursor: pointer; }
+.imp-table .lnk:hover { text-decoration: underline; }
+.imp-table .muted { color: #8194A5; }
+
+.imp-status {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11.5px; font-weight: 700; padding: 3px 9px; border-radius: 999px;
+}
+.imp-status .sdot { width: 6px; height: 6px; border-radius: 999px; }
+.imp-status.ok      { background: #E8F5EC; color: #1F8A3B; }
+.imp-status.ok .sdot { background: #1F8A3B; }
+.imp-status.partial { background: #FFF4E0; color: #B5780E; }
+.imp-status.partial .sdot { background: #E0A100; }
+.imp-status.proc    { background: #E8F2FD; color: #2563C9; }
+.imp-status.proc .sdot { background: #2563C9; }
+
+.imp-empty {
+  padding: 44px 16px; text-align: center; color: #94A3B4; font-size: 13px;
+}
+
+.imp-pager { display: flex; align-items: center; justify-content: flex-end; gap: 6px; padding: 8px; }
+.imp-pager button {
+  min-width: 30px; height: 30px; padding: 0 8px; border-radius: 7px;
+  border: 1px solid #E0E6EC; background: #fff; font: inherit; font-size: 13px;
+  color: #5B6B7B; cursor: pointer;
+}
+.imp-pager button:hover { background: #F0F8FC; border-color: #BFE3F4; }
+.imp-pager button.active { background: #29ABE2; border-color: #29ABE2; color: #fff; font-weight: 700; }
+
+/* ---- Toast --------------------------------------------------------------- */
+.imp-toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 10px;
+  background: #102A40; color: #fff; padding: 12px 18px; border-radius: 12px;
+  box-shadow: 0 16px 40px -10px rgba(15,39,68,.5); z-index: 200;
+  font-size: 13.5px; font-weight: 600;
+  animation: imp-toast-in .2s cubic-bezier(.2,.8,.2,1);
+}
+.imp-toast .t-ic { width: 22px; height: 22px; border-radius: 999px; background: #29C26E; display: inline-flex; align-items: center; justify-content: center; }
+.imp-toast .t-ic svg { width: 13px; height: 13px; }
+@keyframes imp-toast-in { from { opacity: 0; transform: translate(-50%, 12px); } to { opacity: 1; transform: translate(-50%, 0); } }
+
+/* =============================================================
+   Topbar Quick-actions Import submenu (nested flyout)
+   ============================================================= */
+.tb-qa-item.has-sub { position: relative; }
+.tb-qa-sub-chev { margin-left: auto; color: #9AA8B6; display: inline-flex; transition: transform .15s ease; }
+.tb-qa-item.has-sub.open .tb-qa-sub-chev { transform: rotate(90deg); color: #29ABE2; }
+
+.tb-qa-submenu {
+  margin: 2px 6px 6px 50px;
+  padding-left: 10px;
+  border-left: 1.5px solid #E5E9EE;
+  display: flex; flex-direction: column; gap: 1px;
+  animation: imp-pop-in .14s ease-out;
+}
+.tb-qa-sub-item {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; padding: 7px 8px; border: 0; background: transparent;
+  border-radius: 7px; font: inherit; text-align: left; cursor: pointer;
+}
+.tb-qa-sub-item:hover { background: #F0F8FC; }
+.tb-qa-sub-dot {
+  width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center; color: #fff;
+}
+.tb-qa-sub-dot svg { width: 13px; height: 13px; }
+.tb-qa-sub-label { font-size: 12.5px; font-weight: 600; color: #2B3B4A; line-height: 1.2; }
+
+/* =============================================================
+   DARK MODE
+   ============================================================= */
+html[data-theme="dark"] .imp-page { background: var(--dm-bg); }
+html[data-theme="dark"] .imp-title,
+html[data-theme="dark"] .imp-wiz-htext h2,
+html[data-theme="dark"] .imp-card-title,
+html[data-theme="dark"] .imp-history-title { color: var(--dm-text); }
+html[data-theme="dark"] .imp-sub,
+html[data-theme="dark"] .imp-wiz-htext p,
+html[data-theme="dark"] .imp-card-desc,
+html[data-theme="dark"] .imp-step-hint { color: var(--dm-text-muted); }
+
+html[data-theme="dark"] .imp-card,
+html[data-theme="dark"] .imp-wiz-card,
+html[data-theme="dark"] .imp-table-wrap {
+  background: var(--dm-surface); border-color: var(--dm-border);
+}
+html[data-theme="dark"] .imp-step, html[data-theme="dark"] .imp-wiz-foot { border-color: var(--dm-border-soft); }
+html[data-theme="dark"] .imp-step::before { background: var(--dm-border); }
+html[data-theme="dark"] .imp-step-num { background: var(--dm-surface-3); color: var(--dm-text-muted); box-shadow: 0 0 0 1px var(--dm-border); border-color: var(--dm-surface); }
+html[data-theme="dark"] .imp-step-label { color: var(--dm-text); }
+
+html[data-theme="dark"] .imp-dd-trigger { background: var(--dm-surface-alt); border-color: var(--dm-border); color: var(--dm-text); }
+html[data-theme="dark"] .imp-dd-pop { background: var(--dm-surface-3); border-color: var(--dm-border); }
+html[data-theme="dark"] .imp-dd-opt { color: var(--dm-text); }
+html[data-theme="dark"] .imp-dd-opt:hover { background: var(--dm-surface-alt); }
+html[data-theme="dark"] .imp-dd-opt.sel { background: rgba(79,195,247,.16); color: var(--dm-primary); }
+html[data-theme="dark"] .imp-dd-opt .imp-dd-check { color: var(--dm-primary); }
+
+html[data-theme="dark"] .imp-close { background: var(--dm-surface); border-color: var(--dm-border); color: var(--dm-text-muted); }
+html[data-theme="dark"] .imp-close:hover { background: var(--dm-surface-alt); color: var(--dm-text); }
+
+html[data-theme="dark"] .imp-drop { background: var(--dm-surface-alt); border-color: var(--dm-border); }
+html[data-theme="dark"] .imp-drop-title { color: var(--dm-text); }
+
+html[data-theme="dark"] .imp-table thead th { background: var(--dm-surface-alt); color: var(--dm-text-muted); border-color: var(--dm-border); }
+html[data-theme="dark"] .imp-table tbody td { color: var(--dm-text); border-color: var(--dm-border-soft); }
+html[data-theme="dark"] .imp-table tbody tr:hover { background: var(--dm-surface-alt); }
+html[data-theme="dark"] .imp-table .col-file { color: var(--dm-text); }
+
+html[data-theme="dark"] .imp-check-box { background: var(--dm-surface-alt); border-color: var(--dm-border); }
+html[data-theme="dark"] .imp-step-main, html[data-theme="dark"] .imp-check { color: var(--dm-text); }
+
+html[data-theme="dark"] .tb-qa-submenu { border-color: var(--dm-border); }
+html[data-theme="dark"] .tb-qa-sub-label { color: #2B3B4A; }
