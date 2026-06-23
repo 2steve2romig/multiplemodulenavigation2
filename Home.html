@@ -54,6 +54,8 @@
     // Tell App.jsx to default to the Home route on first load.
     window.__DEFAULT_ROUTE__ = "home";
     try { localStorage.removeItem("route"); } catch(e) {}
+    // TODO: auth-gate — replace with tenantId extracted from JWT after auth is wired (ADR-006).
+    window.__TENANT_ID__ = 'c4d2d99e-4dce-4098-a13d-d2d580783fa6';
   </script>
 
   <script src="data.js"></script>

@@ -7,6 +7,26 @@ const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
 
 function App() {
   const tweaks = useTweaks(TWEAK_DEFAULTS);
+
+  // TODO: auth-gate — TENANT_ID comes from window.__TENANT_ID__ (pre-auth placeholder).
+  // When auth is wired, derive tenantId from the JWT claim in ADR-006's extractTenantId.
+  const [modulesReady, setModulesReady] = React.useState(!window.__TENANT_ID__);
+
+  React.useEffect(() => {
+    const tenantId = window.__TENANT_ID__;
+    if (!tenantId) return;
+    fetch('/api/modules', { headers: { 'x-tenant-id': tenantId } })
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then(({ modules }) => {
+        if (modules && modules.length > 0) {
+          window.IQ_CATALOG = modules;
+          window.IQ_BY_ID = Object.fromEntries(modules.map(m => [m.id, m]));
+        }
+      })
+      .catch(() => { /* fall back to iq-catalog.js globals already on window */ })
+      .finally(() => setModulesReady(true));
+  }, []);
+
   const [theme, setTheme] = React.useState(() => {
     try { return localStorage.getItem("theme") || "light"; } catch(e) { return "light"; }
   });
@@ -75,6 +95,8 @@ function App() {
     const map = { map: "home" };
     setRoute(map[id] || id);
   }
+
+  if (!modulesReady) return <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100vh",color:"var(--text-muted,#888)",fontSize:14}}>Loading modules…</div>;
 
   const iqId = typeof route === "string" && route.indexOf("iq:") === 0 ? route.slice(3) : null;
   const learnId = typeof route === "string" && route.indexOf("learn:") === 0 ? route.slice(6) : null;
