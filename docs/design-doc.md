@@ -1,7 +1,7 @@
 # SureTrend Platform — Architecture Design Document
 
-> **Status:** Draft v1.1 — updated post cold review 2026-06-23  
-> **Version:** 1.1  
+> **Status:** Draft v1.2 — updated post domain review 2026-06-23  
+> **Version:** 1.2  
 > **Date:** 2026-06-23  
 > **Scope:** V1 — Platform shell + entitlement layer
 
@@ -13,13 +13,22 @@
 **Customers:** Food and beverage manufacturing facilities; multi-site organizations  
 **Business model:** SaaS, multi-tenant, à la carte module purchase  
 
-**Regulatory context:**  
-- FSMA (Food Safety Modernization Act) — US federal law governing preventive controls, traceability, environmental monitoring
-- SQF (Safe Quality Food) — GFSI-recognized certification scheme
-- BRCGS (British Retail Consortium Global Standards) — global food safety standard
-- FSSC 22000 — ISO-based food safety management system standard
+**Regulatory context:**
 
-These frameworks impose strict data integrity, audit trail, and traceability requirements that directly shape the platform's architecture: data must be immutable after submission, audit trails must be tamper-evident, and access must be role-controlled and logged.
+SureTrend customers operate under one or more of the following frameworks. The specific clauses below directly shape platform data architecture — immutability, audit trails, electronic signatures, and access control.
+
+| Framework | Relevant Clauses | Architectural impact |
+|---|---|---|
+| **SQF** (Safe Quality Food) | §11.5.1 document control, §11.5.2 records management, §2.1.1 senior management commitment | Immutable records, document versioning, role-based access |
+| **BRCGS** (British Retail Consortium) | §4.11.1 goods receipt traceability, §4.11.2 product traceability, §3.11 food safety plan | Lot-level traceability data, food safety plan builder |
+| **FSMA** (Food Safety Modernization Act) | §117.135 monitoring of preventive controls, §117.80 sanitation controls (prerequisite programs) | Preventive control monitoring records, sanitation scheduling |
+| **FDA 21 CFR Part 117** | §117.190 supply chain program | Supplier qualification, supply chain records |
+| **FDA 21 CFR Part 11** | §11.10 electronic records and signature controls | **Audit trail is mandatory.** Records must be: attributable, legible, contemporaneous, original, accurate (ALCOA). System must enforce: access controls, audit trail with timestamps, data integrity, no record deletion |
+| **PrimusGFS** | Good Agricultural Practices — fresh produce | Environmental monitoring, sanitation, pest control |
+| **CanadaGAP** | Canadian Good Agricultural Practices | Environmental monitoring, recordkeeping |
+| **GLOBALG.A.P.** | Good Agricultural Practice — international | Traceability, environmental monitoring |
+
+**21 CFR Part 11 §11.10 is the highest-impact clause** for a digital platform. It requires: validated systems, complete audit trails with timestamps, access limited to authorized individuals, authority checks enforced in software, and records that cannot be altered without detection. This is non-negotiable before any regulated customer goes live.
 
 **V1 scope:** Platform shell + entitlement layer only. Individual IQ modules (ATP, Map, Sample, etc.) are onboarded one at a time after the platform foundation is validated.
 
@@ -27,13 +36,27 @@ These frameworks impose strict data integrity, audit trail, and traceability req
 
 ## b) Tenancy Model
 
-- **Tenant** = one customer organization (e.g., Acme Foods, Inc.). A tenant may have many sites, users, and devices.
-- **`tenantId`** is the primary axis. It travels on every API request, database row, log line, metric, trace, and event. No data structure is tenant-agnostic.
-- **Users** belong to one or more tenants via `user_tenant_memberships`. A user may have different roles across tenants.
-- **Entitlements** are per-tenant. Each entitlement record specifies which module a tenant has purchased, its status (`active` | `suspended` | `expired`), and its expiry timestamp. Customers buy modules à la carte.
-- **Entitlement expiry is enforced at query time** — every API route that reads entitlements filters server-side: `status = 'active' AND (expires_at IS NULL OR expires_at > now())`. The `status` field alone is not sufficient; query-time expiry filtering is mandatory on every entitlement access path. There is no reliance on a background job to flip status before the query runs.
+### Billing hierarchy (domain requirement — SME review 2026-06-23)
+
+SureTrend must support two billing models simultaneously:
+
+| Model | Description | Example |
+|---|---|---|
+| **Corporate billing** | A parent organization pays for modules; all its child sites inherit those entitlements | Acme Foods Corp pays for ATP IQ → all 12 Acme plants can use it |
+| **Site billing** | An individual site pays for its own modules independently | Acme Foods Chicago Plant pays for Kleanz IQ separately |
+
+A site's effective entitlements = **union of its own entitlements + its parent organization's entitlements**. See ADR-007 for the full hierarchy model and resolution algorithm.
+
+### Tenant concepts
+
+- **Organization** — the corporate/contracting entity (e.g., Acme Foods, Inc.). May have many sites. May hold corporate-level entitlements.
+- **Site** — an individual facility or plant (e.g., Acme Foods Chicago). Always belongs to exactly one organization. May hold site-level entitlements in addition to inheriting org-level ones.
+- **`tenantId`** always refers to a **Site** — the most granular billing and data-isolation unit. It travels on every API request, database row, log line, metric, trace, and event. No data structure is tenant-agnostic.
+- **Users** belong to one or more sites (via `user_tenant_memberships`). A user may have different roles across sites.
+- **Entitlements** are held at either the Organization or Site level. The Platform API resolves effective entitlements by unioning both before returning the module manifest list.
+- **Entitlement expiry is enforced at query time** — every API route that reads entitlements filters server-side: `status = 'active' AND (expires_at IS NULL OR expires_at > now())`. The `status` field alone is not sufficient; query-time expiry filtering is mandatory on every entitlement access path.
 - **Authentication is deferred.** No identity provider is wired at this time. The entitlement model and `tenantId` scaffolding are built now so auth can be added without structural rework. All endpoints that will require auth enforcement before production are marked `// TODO: auth-gate`.
-- **Visibility is computed server-side.** The shell renders only what the platform API says a tenant is entitled to. The client is never the source of truth for access.
+- **Visibility is computed server-side.** The shell renders only what the platform API says a site is entitled to (direct + inherited). The client is never the source of truth for access.
 
 ---
 
@@ -189,6 +212,9 @@ Each IQ module is self-describing via one manifest. The Platform API serves the 
 | 2 | Auth provider selection (Supabase Auth vs Auth0 vs other) | TBD | Yes — before production |
 | 3 | EU data residency decision (GDPR customer demand?) | Business | No — design is ready; decision is commercial |
 | 4 | Per-module pricing data (replace `$X/mo` in manifests) | Product | No — needed for subscription UI |
-| 5 | FSMA traceability requirements per module | SME review | Yes — affects data model per module |
+| 5 | FSMA / SQF / BRCGS traceability requirements per module | SME review | Yes — affects data model per module |
 | 6 | Admin endpoint pre-auth shared secret | Engineering | Yes — before any public deployment of the platform API |
 | 7 | `minRequiredRole` server-side enforcement | Engineering | No for v1 (display only); Yes before auth is wired |
+| 8 | 21 CFR Part 11 §11.10 compliance audit — immutable audit trail, electronic signature, access log design | Engineering + SME | Yes — required before any regulated customer goes live |
+| 9 | Org/Site billing hierarchy implementation (ADR-007) | Engineering | Yes — current flat tenant model cannot support corporate + site billing |
+| 10 | User role names aligned with SureTrend domain (SME to define) | sromig@hygiena.com | No for v1; Yes before auth is wired |
