@@ -227,5 +227,5 @@ Each IQ module is self-describing via one manifest. The Platform API serves the 
 | 6 | Admin endpoint pre-auth shared secret | Engineering | Yes — before any public deployment of the platform API |
 | 7 | `minRequiredRole` server-side enforcement | Engineering | No for v1 (display only); Yes before auth is wired |
 | 8 | 21 CFR Part 11 §11.10 compliance audit — immutable audit trail, electronic signature, access log design | Engineering + SME | Yes — required before any regulated customer goes live |
-| 9 | Org/Site billing hierarchy implementation (ADR-007) | Engineering | Yes — current flat tenant model cannot support corporate + site billing |
+| 9 | ~~Org/Site billing hierarchy implementation (ADR-007)~~ — **Resolved 2026-06-23.** Organizations table, org_id FK on tenants, org_entitlements table live in Supabase (migration 002). GET /api/modules unions site + org entitlements. Admin routes: POST /api/organizations, POST /api/org-entitlements, PATCH /api/tenants/:id. | Engineering | Closed |
 | 10 | ~~User role names aligned with SureTrend domain~~ — **Resolved 2026-06-23.** Roles confirmed: Owner / Global Admin / Admin / User. Implemented in seed.sql, live DB, and iq-catalog.js. | sromig@hygiena.com | Closed |
