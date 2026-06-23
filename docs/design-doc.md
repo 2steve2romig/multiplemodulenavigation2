@@ -1,7 +1,7 @@
 # SureTrend Platform — Architecture Design Document
 
-> **Status:** Draft — pending domain/acceptance review (SME: sromig@hygiena.com)  
-> **Version:** 1.0  
+> **Status:** Draft v1.1 — updated post cold review 2026-06-23  
+> **Version:** 1.1  
 > **Date:** 2026-06-23  
 > **Scope:** V1 — Platform shell + entitlement layer
 
@@ -31,6 +31,7 @@ These frameworks impose strict data integrity, audit trail, and traceability req
 - **`tenantId`** is the primary axis. It travels on every API request, database row, log line, metric, trace, and event. No data structure is tenant-agnostic.
 - **Users** belong to one or more tenants via `user_tenant_memberships`. A user may have different roles across tenants.
 - **Entitlements** are per-tenant. Each entitlement record specifies which module a tenant has purchased, its status (`active` | `suspended` | `expired`), and its expiry timestamp. Customers buy modules à la carte.
+- **Entitlement expiry is enforced at query time** — every API route that reads entitlements filters server-side: `status = 'active' AND (expires_at IS NULL OR expires_at > now())`. The `status` field alone is not sufficient; query-time expiry filtering is mandatory on every entitlement access path. There is no reliance on a background job to flip status before the query runs.
 - **Authentication is deferred.** No identity provider is wired at this time. The entitlement model and `tenantId` scaffolding are built now so auth can be added without structural rework. All endpoints that will require auth enforcement before production are marked `// TODO: auth-gate`.
 - **Visibility is computed server-side.** The shell renders only what the platform API says a tenant is entitled to. The client is never the source of truth for access.
 
@@ -78,13 +79,13 @@ Future — each IQ module (standalone, per ADR-001):
 │  Vercel          │   │  Vercel          │
 │  + ATP Supabase  │   │  + Map Supabase  │
 └──────────────────┘   └──────────────────┘
-  Cross-module communication: Supabase Realtime events
-  or webhooks, namespaced by tenantId. Never direct DB queries.
+  Cross-module communication: webhooks only (see §f).
+  Never direct DB queries across module boundaries.
 ```
 
 **Key constraints:**
 - The Supabase service role key is **server-only** — never exposed to the React client bundle or prefixed `NEXT_PUBLIC_` / `VITE_`.
-- The React shell uses only the Supabase **anon key** (if needed for direct Realtime subscriptions) — always with RLS enforcing tenantId.
+- The React shell does **not** use the Supabase anon key for Realtime. Cross-module events use webhooks between server-side APIs (see §f). The anon key is not used in the React client in v1.
 - No in-memory state in Node.js serverless functions (Vercel functions are stateless; local variables do not persist across invocations).
 
 ---
@@ -105,7 +106,7 @@ Future — each IQ module (standalone, per ADR-001):
 **Rules:**
 - Each module owns its data exclusively and privately.
 - No module reads or writes another module's Supabase tables directly.
-- Cross-module interaction goes through the Platform API or Supabase Realtime events.
+- Cross-module interaction goes through the Platform API or webhooks (see §f). Never Supabase Realtime across projects.
 - The Platform/Core service is the one acceptable shared dependency.
 
 ---
@@ -152,10 +153,17 @@ Each IQ module is self-describing via one manifest. The Platform API serves the 
 - The shell passes `tenantId` (and, when auth is wired, an auth token) to each module's context.
 - Modules are loaded lazily (code-split) so an unavailable module doesn't block the shell.
 
-**Cross-module events**
-- Supabase Realtime channels, namespaced: `tenant:{tenantId}:module:{moduleId}:event:{eventType}`
-- Alternatively: webhook POST from one module's API to the Platform API, which fans out to subscribers.
+**Cross-module events — webhooks only**
+- Each IQ module is a separate Supabase project. Supabase Realtime is scoped per project and cannot span projects. Therefore Realtime is **not** the cross-module event mechanism.
+- Cross-module events use **webhooks**: the originating module's API sends a POST to the Platform API (`/api/events`), which fans out to subscriber modules.
+- Event payload carries `tenantId` and is verified server-side by the receiving module.
+- Webhook endpoint authentication: shared HMAC secret per module pair, verified in middleware.
 - Never: one module's Node.js code calling another module's Supabase DB directly.
+
+**CORS**
+- The Platform API sets an explicit `Access-Control-Allow-Origin` allowlist — only the shell's Vercel domain and registered module domains are permitted.
+- `Access-Control-Allow-Origin: *` is never used on any route that carries tenant data.
+- CORS allowlist is an environment variable, not hardcoded, so it can include preview deployment URLs in dev.
 
 ---
 
@@ -165,9 +173,9 @@ Each IQ module is self-describing via one manifest. The Platform API serves the 
 |---|---|
 | Default locale | `en-US` |
 | Supported locales (v1) | `en-US` only — bake in the capability, defer additional locales until demanded |
-| UI strings | Locale-keyed resource layer; no hardcoded user-facing strings in JSX or Node.js responses |
+| UI strings | **V1: en-US strings only, English hardcoded.** The i18n library (react-intl) and locale resource file structure are set up in v1 so strings can be extracted to locale keys when a second locale is demanded — but no translation work is done until then. `pricingLabel` in module manifests is a public list price string, never tenant-specific. |
 | Date/time storage | UTC in Supabase; rendered in user's locale and time zone |
-| Number/currency formatting | Locale-aware; no hardcoded `$` or unit symbols |
+| Number/currency formatting | V1: en-US formatting only. Locale-aware formatting (Intl.NumberFormat, Intl.DateTimeFormat) used throughout so locale can be swapped without code changes. No hardcoded `$` or unit symbols in logic — display-only strings in the en-US resource file. |
 | Unicode | UTF-8 end to end; non-Latin scripts and RTL layouts not precluded |
 | Data residency | US region (Supabase `us-east-1`) initially; `region` field on `tenants` table enables per-tenant routing to a future EU project without structural rework |
 
@@ -182,3 +190,5 @@ Each IQ module is self-describing via one manifest. The Platform API serves the 
 | 3 | EU data residency decision (GDPR customer demand?) | Business | No — design is ready; decision is commercial |
 | 4 | Per-module pricing data (replace `$X/mo` in manifests) | Product | No — needed for subscription UI |
 | 5 | FSMA traceability requirements per module | SME review | Yes — affects data model per module |
+| 6 | Admin endpoint pre-auth shared secret | Engineering | Yes — before any public deployment of the platform API |
+| 7 | `minRequiredRole` server-side enforcement | Engineering | No for v1 (display only); Yes before auth is wired |
