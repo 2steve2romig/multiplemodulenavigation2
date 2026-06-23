@@ -10,8 +10,10 @@ async function extractTenantId(req) {
   //   const { data: { user } } = await supabase.auth.getUser(token);
   //   return user?.app_metadata?.tenant_id ?? null;
 
-  // DEV / PRE-AUTH only — trust X-Tenant-ID header. Never in production.
-  if (process.env.NODE_ENV !== 'production') {
+  // DEV / PRE-AUTH only — trust X-Tenant-ID header when explicitly enabled.
+  // Set ALLOW_DEV_TENANT_HEADER=true in Vercel env vars for pre-auth testing.
+  // Remove this env var (or set to anything else) before going live with auth.
+  if (process.env.ALLOW_DEV_TENANT_HEADER === 'true') {
     const devHeader = req.headers['x-tenant-id'];
     if (devHeader) return devHeader;
   }
