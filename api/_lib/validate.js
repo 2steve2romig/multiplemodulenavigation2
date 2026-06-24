@@ -33,6 +33,15 @@ const OrgEntitlementCreateSchema = z.object({
   expires_at: z.string().datetime().nullable().optional(),
 });
 
+// PATCH /api/entitlements/:id — update status and/or expires_at
+const EntitlementPatchSchema = z.object({
+  status:     z.enum(['active', 'suspended', 'expired']).optional(),
+  expires_at: z.string().datetime().nullable().optional(),
+}).refine(
+  body => body.status !== undefined || body.expires_at !== undefined,
+  { message: 'At least one field (status, expires_at) is required' },
+);
+
 const TenantIdQuerySchema = z.object({
   // tenantId comes from req.tenantId (middleware), not from query string.
   // This schema validates any extra query params that should not be trusted.
@@ -42,6 +51,7 @@ module.exports = {
   TenantCreateSchema,
   TenantPatchSchema,
   EntitlementCreateSchema,
+  EntitlementPatchSchema,
   OrgCreateSchema,
   OrgEntitlementCreateSchema,
   TenantIdQuerySchema,

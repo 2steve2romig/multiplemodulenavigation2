@@ -134,6 +134,10 @@ Migration `005_transactional_audit_rpcs.sql`: four PostgreSQL functions wrapping
 
 Integration tests added in `test/integration/admin-routes.test.js` verifying that each mutation route creates a corresponding `audit_log` entry (atomicity happy-path gate).
 
+**Extended 2026-06-24** — Migration `006_restrict_and_softdelete.sql` adds `update_entitlement_with_audit` RPC using the same fail-closed pattern. `PATCH /api/entitlements/:id` (`api/entitlements/[id].js`) is now implemented. Captures `before_state` and `after_state` for ALCOA "Original" requirement. Integration tests updated: 7 new test cases in `test/integration/admin-routes.test.js` covering 401/400/404/200 + audit entry verification.
+
+Migration 006 also changes `audit_log.tenant_id` and `audit_log.org_id` FKs from `ON DELETE SET NULL` → `ON DELETE RESTRICT`, and adds `deleted_at timestamptz` to `tenants` and `organizations` (soft-delete pattern — only compliant deletion path for regulated entities with audit records).
+
 ### Phase 2b - Electronic signatures (per IQ module)
 
 Implemented inside each IQ module's API when a workflow step requires a regulated signature. Not in the platform layer. Pending — no IQ modules built yet.

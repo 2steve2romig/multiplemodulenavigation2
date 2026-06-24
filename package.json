@@ -7,6 +7,8 @@
   },
   "scripts": {
     "build": "echo 'No build step — static site with serverless functions in api/'",
+    "dev": "vercel dev",
+    "dev:supabase": "supabase start",
     "test": "jest",
     "test:unit": "jest test/unit",
     "test:integration": "jest test/integration"

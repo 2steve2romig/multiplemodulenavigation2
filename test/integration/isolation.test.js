@@ -13,14 +13,17 @@
 
 const { createClient } = require('@supabase/supabase-js');
 
-const apiRequired = ['PLATFORM_URL', 'TENANT_A_ID', 'TENANT_B_ID'];
-const rlsRequired = ['SUPABASE_URL', 'SUPABASE_ANON_KEY', 'TENANT_A_ID', 'TENANT_B_ID'];
+const apiRequired    = ['PLATFORM_URL', 'TENANT_A_ID', 'TENANT_B_ID'];
+const rlsRequired    = ['SUPABASE_URL', 'SUPABASE_ANON_KEY', 'TENANT_A_ID', 'TENANT_B_ID'];
+const schemaRequired = ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY'];
 
-const apiMissing = apiRequired.filter(k => !process.env[k]);
-const rlsMissing = rlsRequired.filter(k => !process.env[k]);
+const apiMissing    = apiRequired.filter(k => !process.env[k]);
+const rlsMissing    = rlsRequired.filter(k => !process.env[k]);
+const schemaMissing = schemaRequired.filter(k => !process.env[k]);
 
-if (apiMissing.length) console.warn(`API isolation tests skipped — missing: ${apiMissing.join(', ')}`);
-if (rlsMissing.length) console.warn(`RLS isolation tests skipped — missing: ${rlsMissing.join(', ')}`);
+if (apiMissing.length)    console.warn(`API isolation tests skipped — missing: ${apiMissing.join(', ')}`);
+if (rlsMissing.length)    console.warn(`RLS isolation tests skipped — missing: ${rlsMissing.join(', ')}`);
+if (schemaMissing.length) console.warn(`Schema constraint tests skipped — missing: ${schemaMissing.join(', ')}`);
 
 const describeIf = (cond) => cond ? describe : describe.skip;
 
@@ -119,9 +122,47 @@ describeIf(rlsMissing.length === 0)('Supabase RLS isolation (anon key)', () => {
   });
 
   test('anon key cannot read audit_log', async () => {
-    // audit_log has deny-all RLS; 21 CFR Part 11 records must never be
-    // readable by client roles.
     const { data } = await anonClient.from('audit_log').select('*');
     expect(data).toHaveLength(0);
+  });
+});
+
+// ─── Schema constraints (migration 006: ON DELETE RESTRICT) ──────────────────
+// Prove that hard-deleting a tenant with audit records is blocked at the DB level.
+// This enforces the 21 CFR ALCOA "Attributable" requirement: regulated audit
+// records must remain traceable to their originating tenant indefinitely.
+
+describeIf(schemaMissing.length === 0)('Schema constraints — ON DELETE RESTRICT (migration 006)', () => {
+  let serviceClient;
+
+  beforeAll(() => {
+    serviceClient = createClient(
+      process.env.SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY,
+    );
+  });
+
+  test('hard-delete of tenant with audit records is blocked (ON DELETE RESTRICT)', async () => {
+    const { data: tenant } = await serviceClient
+      .from('tenants')
+      .insert({ name: 'RESTRICT Constraint Test' })
+      .select()
+      .single();
+
+    await serviceClient.from('audit_log').insert({
+      event_type:    'test.restrict_check',
+      actor_type:    'system',
+      tenant_id:     tenant.id,
+      resource_type: 'tenant',
+      resource_id:   tenant.id,
+    });
+
+    const { error } = await serviceClient
+      .from('tenants')
+      .delete()
+      .eq('id', tenant.id);
+
+    expect(error).not.toBeNull();
+    expect(error.message).toMatch(/foreign key constraint/i);
   });
 });

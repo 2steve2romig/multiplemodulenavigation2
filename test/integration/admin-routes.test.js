@@ -231,6 +231,101 @@ describeIf(auditMissing.length === 0)('Audit atomicity (ADR-008 Phase 2)', () =>
   });
 });
 
+// ─── PATCH /api/entitlements/:id ─────────────────────────────────────────────
+
+describeIf(auditMissing.length === 0)('PATCH /api/entitlements/:id (admin)', () => {
+  let testEntitlementId;
+
+  beforeAll(async () => {
+    const tenantRes = await fetch(`${BASE()}/api/tenants`, {
+      method: 'POST',
+      headers: ADMIN(),
+      body: JSON.stringify({ name: 'PATCH Entitlement Test Site' }),
+    });
+    const { tenant } = await tenantRes.json();
+
+    const entRes = await fetch(`${BASE()}/api/entitlements`, {
+      method: 'POST',
+      headers: ADMIN(),
+      body: JSON.stringify({ tenant_id: tenant.id, module_id: 'atp', status: 'active' }),
+    });
+    const { entitlement } = await entRes.json();
+    testEntitlementId = entitlement.id;
+  });
+
+  test('returns 401 without admin secret', async () => {
+    const res = await fetch(`${BASE()}/api/entitlements/${testEntitlementId}`, {
+      method: 'PATCH',
+      headers: NO_SECRET(),
+      body: JSON.stringify({ status: 'suspended' }),
+    });
+    expect(res.status).toBe(401);
+  });
+
+  test('returns 400 with invalid entitlement UUID in path', async () => {
+    const res = await fetch(`${BASE()}/api/entitlements/not-a-uuid`, {
+      method: 'PATCH',
+      headers: ADMIN(),
+      body: JSON.stringify({ status: 'suspended' }),
+    });
+    expect(res.status).toBe(400);
+  });
+
+  test('returns 400 with invalid status value', async () => {
+    const res = await fetch(`${BASE()}/api/entitlements/${testEntitlementId}`, {
+      method: 'PATCH',
+      headers: ADMIN(),
+      body: JSON.stringify({ status: 'unknown' }),
+    });
+    expect(res.status).toBe(400);
+  });
+
+  test('returns 400 with empty body (no fields to update)', async () => {
+    const res = await fetch(`${BASE()}/api/entitlements/${testEntitlementId}`, {
+      method: 'PATCH',
+      headers: ADMIN(),
+      body: JSON.stringify({}),
+    });
+    expect(res.status).toBe(400);
+  });
+
+  test('returns 404 for non-existent entitlement id', async () => {
+    const res = await fetch(`${BASE()}/api/entitlements/00000000-0000-0000-0000-000000000000`, {
+      method: 'PATCH',
+      headers: ADMIN(),
+      body: JSON.stringify({ status: 'suspended' }),
+    });
+    expect(res.status).toBe(404);
+  });
+
+  test('updates status and creates entitlement.updated audit entry with before/after states', async () => {
+    const res = await fetch(`${BASE()}/api/entitlements/${testEntitlementId}`, {
+      method: 'PATCH',
+      headers: ADMIN(),
+      body: JSON.stringify({ status: 'suspended' }),
+    });
+    expect(res.status).toBe(200);
+    const { entitlement } = await res.json();
+    expect(entitlement.status).toBe('suspended');
+    expect(entitlement.id).toBe(testEntitlementId);
+
+    const logsRes = await fetch(
+      `${BASE()}/api/audit-log?resource_type=entitlement&resource_id=${encodeURIComponent(testEntitlementId)}`,
+      { headers: { 'x-admin-secret': process.env.ADMIN_SECRET } },
+    );
+    const { logs } = await logsRes.json();
+    const entry = logs.find(l => l.event_type === 'entitlement.updated');
+    expect(entry).toBeDefined();
+    expect(entry.before_state.status).toBe('active');
+    expect(entry.after_state.status).toBe('suspended');
+  });
+
+  test('returns 405 for GET on resource path', async () => {
+    const res = await fetch(`${BASE()}/api/entitlements/${testEntitlementId}`);
+    expect(res.status).toBe(405);
+  });
+});
+
 // ─── PATCH /api/tenants/:id ───────────────────────────────────────────────────
 
 describeIf(missing.length === 0)('PATCH /api/tenants/:id (admin)', () => {
