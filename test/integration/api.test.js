@@ -48,6 +48,48 @@ describeIf(missing.length === 0)('GET /api/modules', () => {
     const { modules } = await res.json();
     expect(modules).toHaveLength(0);
   });
+
+  test('annotates every module with _source of org or site', async () => {
+    const res = await fetch(`${process.env.PLATFORM_URL}/api/modules`, {
+      headers: { 'x-tenant-id': tenantAId },
+    });
+    const { modules } = await res.json();
+    modules.forEach(m => {
+      expect(['org', 'site']).toContain(m._source);
+    });
+  });
+
+  test('supplier module is sourced from org (org entitlement only — no site entitlement)', async () => {
+    // supplier is granted to Acme Foods Inc. org; Tenant A has no site-level entitlement for it.
+    const res = await fetch(`${process.env.PLATFORM_URL}/api/modules`, {
+      headers: { 'x-tenant-id': tenantAId },
+    });
+    const { modules } = await res.json();
+    const supplier = modules.find(m => m.id === 'supplier');
+    expect(supplier).toBeDefined();
+    expect(supplier._source).toBe('org');
+  });
+
+  test('atp module is sourced from site (direct site entitlement)', async () => {
+    const res = await fetch(`${process.env.PLATFORM_URL}/api/modules`, {
+      headers: { 'x-tenant-id': tenantAId },
+    });
+    const { modules } = await res.json();
+    const atp = modules.find(m => m.id === 'atp');
+    expect(atp).toBeDefined();
+    expect(atp._source).toBe('site');
+  });
+
+  test('plan module is sourced from site when site also has a direct entitlement', async () => {
+    // plan has both site and org entitlements for Tenant A; site wins per ADR-007.
+    const res = await fetch(`${process.env.PLATFORM_URL}/api/modules`, {
+      headers: { 'x-tenant-id': tenantAId },
+    });
+    const { modules } = await res.json();
+    const plan = modules.find(m => m.id === 'plan');
+    expect(plan).toBeDefined();
+    expect(plan._source).toBe('site');
+  });
 });
 
 describeIf(missing.length === 0)('GET /api/entitlements', () => {
