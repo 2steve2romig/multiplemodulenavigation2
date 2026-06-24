@@ -9,6 +9,7 @@ const { requireAdminSecret } = require('../_middleware/requireAdminSecret');
 const { handleCors } = require('../_middleware/cors');
 const { supabase } = require('../_lib/supabase');
 const { TenantPatchSchema } = require('../_lib/validate');
+const { writeAuditLog, requestContext } = require('../_lib/audit');
 const { z } = require('zod');
 
 const UuidSchema = z.string().uuid();
@@ -58,6 +59,17 @@ module.exports = async (req, res) => {
       .single();
 
     if (error || !data) return res.status(404).json({ error: 'Tenant not found' });
+
+    await writeAuditLog({
+      event_type: 'tenant.updated',
+      actor_type: 'admin',
+      tenant_id: data.id,
+      resource_type: 'tenant',
+      resource_id: data.id,
+      after_state: data,
+      ...requestContext(req),
+    });
+
     return res.status(200).json({ tenant: data });
   }
 

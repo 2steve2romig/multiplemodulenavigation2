@@ -10,6 +10,7 @@ const { handleCors } = require('./_middleware/cors');
 const { supabase } = require('./_lib/supabase');
 const { filterActiveEntitlements } = require('./_lib/entitlements');
 const { EntitlementCreateSchema } = require('./_lib/validate');
+const { writeAuditLog, requestContext } = require('./_lib/audit');
 
 module.exports = async (req, res) => {
   if (handleCors(req, res)) return;
@@ -45,6 +46,17 @@ module.exports = async (req, res) => {
       .single();
 
     if (error) return res.status(500).json({ error: 'Failed to create entitlement' });
+
+    await writeAuditLog({
+      event_type: 'entitlement.created',
+      actor_type: 'admin',
+      tenant_id: data.tenant_id,
+      resource_type: 'entitlement',
+      resource_id: data.id,
+      after_state: data,
+      ...requestContext(req),
+    });
+
     return res.status(201).json({ entitlement: data });
   }
 

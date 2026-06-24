@@ -1,6 +1,6 @@
 # ADR-008: 21 CFR Part 11 Compliance Design - Audit Trail and Electronic Records
 
-**Status:** Accepted - NOT YET IMPLEMENTED  
+**Status:** Accepted - Phase 1 Implemented (2026-06-24)  
 **Date:** 2026-06-23  
 **Deciders:** sromig@hygiena.com  
 **Blocking:** Yes - required before any regulated customer goes live (Open Item #8)
@@ -149,4 +149,5 @@ Implemented inside each IQ module's API when a workflow step requires a regulate
 - Audit log grows unboundedly — must plan for data retention (FDA requires records kept for minimum 2 years for food safety records).
 - `GET /api/audit-log` is sensitive — requires strict access control when auth is wired.
 - The `audit.js` helper must never throw — a failed audit write must emit an alert but not roll back the primary operation (fail-open for the business operation, fail-loud for observability).
-- **Not yet implemented** — tracked in Open Item #8.
+- **Phase 1 implemented** — `audit_log` table (migration 003), `api/_lib/audit.js` helper, and audit writes wired into all entitlement and tenant mutation routes. `GET /api/audit-log` admin read route live.
+- **Phase 2 and 3** remain pending — electronic signatures per IQ module workflow, and system validation protocol before regulated customers go live.
