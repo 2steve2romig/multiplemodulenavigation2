@@ -60,13 +60,29 @@ async function writeAuditLog(event) {
   }
 }
 
+// Basic IPv4/IPv6 sanity check — rejects injected strings.
+const IP_RE = /^[\d.:a-fA-F]+$/;
+
 /**
  * Extract request context fields from an Express-style request object.
- * Produces ip_address, user_agent, and a synthetic request_id.
+ *
+ * ip_address: On Vercel, X-Forwarded-For is a comma-separated list where
+ * Vercel appends the real client IP last. We take the last entry so that
+ * a spoofed first entry (client-controlled) is ignored.
  */
 function requestContext(req) {
+  let ip_address = null;
+  const xff = req.headers['x-forwarded-for'];
+  if (xff) {
+    const parts = xff.split(',').map(s => s.trim());
+    const last = parts[parts.length - 1];
+    if (IP_RE.test(last)) ip_address = last;
+  } else if (req.socket && req.socket.remoteAddress) {
+    const addr = req.socket.remoteAddress;
+    if (IP_RE.test(addr)) ip_address = addr;
+  }
   return {
-    ip_address: (req.headers['x-forwarded-for'] || req.socket?.remoteAddress || null),
+    ip_address,
     user_agent: (req.headers['user-agent'] || null),
     request_id: (req.headers['x-request-id'] || null),
   };

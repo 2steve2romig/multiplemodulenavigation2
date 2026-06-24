@@ -119,7 +119,14 @@ Electronic signatures are NOT required for every API call — only for regulated
 1. Run migration `003_audit_log.sql` to create `audit_log` and `electronic_signatures` tables with RLS.
 2. Add `writeAuditLog(event)` helper to `api/_lib/audit.js` — wraps Supabase insert, never throws (audit failure must not block the primary operation, but must be alerted).
 3. Add audit writes to all entitlement and membership mutation routes.
-4. Add `GET /api/audit-log` route (admin only) — paginated, filterable by `tenant_id`, `event_type`, `occurred_at` range.
+4. Add `GET /api/audit-log` route (admin only) — paginated, filterable by `tenant_id`, `event_type`, `resource_id`, `occurred_at` range.
+5. Run migration `004_audit_hardening.sql`: PostgreSQL immutability trigger on `audit_log` (blocks UPDATE/DELETE for all roles including service role); RLS on `organizations` and `org_entitlements`; `(resource_type, resource_id)` index.
+
+**Hard production blockers in Phase 1 (cold review 2026-06-24):**
+
+- **Fail-open audit writes are not 21 CFR Part 11 compliant.** The current implementation calls `writeAuditLog()` after the primary database write. If the audit write fails, the business record exists without an audit trail — a direct violation of §11.10(b) completeness requirement. "Fail-open with alerting" is an acceptable engineering tradeoff for non-regulated workloads; it is not an acceptable interpretation of 21 CFR Part 11. **This must be resolved before any regulated customer goes live.** The fix is to wrap each regulated mutation and its audit write in a single PostgreSQL transaction via Supabase RPC. If the audit write fails, the transaction rolls back and the mutation is rejected.
+
+- **`actor_id` is not attributable.** Phase 1 audit records carry `actor_id: 'admin'` (a static string from the shared admin secret). ALCOA requires identifying the specific individual. When auth is wired, `actor_id` will be replaced with the authenticated user's JWT subject. To avoid silently mixing attributed and non-attributed records, the auth enablement event must write a `system.auth_enabled` tombstone record to mark the boundary — records before the boundary are prototype-phase; records after carry real identities. This tombstone must be written as the first action when auth is enabled.
 
 ### Phase 2 - Electronic signatures (per IQ module)
 
@@ -148,6 +155,6 @@ Implemented inside each IQ module's API when a workflow step requires a regulate
 - Every regulated mutation path gains a synchronous audit write — adds ~5ms latency per request (one additional INSERT).
 - Audit log grows unboundedly — must plan for data retention (FDA requires records kept for minimum 2 years for food safety records).
 - `GET /api/audit-log` is sensitive — requires strict access control when auth is wired.
-- The `audit.js` helper must never throw — a failed audit write must emit an alert but not roll back the primary operation (fail-open for the business operation, fail-loud for observability).
+- The `audit.js` helper currently never throws (fail-open). **This must change before regulated customers:** wrap mutation + audit in a Supabase RPC so both succeed or both roll back. See hard production blocker above.
 - **Phase 1 implemented** — `audit_log` table (migration 003), `api/_lib/audit.js` helper, and audit writes wired into all entitlement and tenant mutation routes. `GET /api/audit-log` admin read route live.
 - **Phase 2 and 3** remain pending — electronic signatures per IQ module workflow, and system validation protocol before regulated customers go live.

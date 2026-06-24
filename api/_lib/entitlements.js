@@ -20,12 +20,26 @@ function filterEntitledManifests(manifests, entitledModuleIds) {
 }
 
 // Unions site-level and org-level entitlement rows by module_id.
-// Site rows take precedence on conflict (a site can independently suspend a module
-// the org has active, e.g. during a compliance hold).
-function unionEntitlements(siteRows, orgRows) {
+//
+// Site rows override org rows when the site row reflects a deliberate action:
+//   - active (site has its own subscription)
+//   - suspended (site is intentionally pausing a corporate module)
+//
+// An expired site row (status='expired' OR expires_at in the past) falls through
+// to the org row. Accidental lapse of a site entitlement must not silently block
+// a module the corporate org has actively granted.
+//
+// Decision recorded in ADR-007.
+function unionEntitlements(siteRows, orgRows, now = new Date()) {
   const map = new Map();
   for (const row of orgRows) map.set(row.module_id, row);
-  for (const row of siteRows) map.set(row.module_id, row); // site wins
+  for (const row of siteRows) {
+    const timeExpired = row.expires_at && new Date(row.expires_at) <= now;
+    if (row.status !== 'expired' && !timeExpired) {
+      map.set(row.module_id, row); // deliberate site state wins
+    }
+    // If site row is expired (any flavour), org row stays in the map
+  }
   return Array.from(map.values());
 }
 

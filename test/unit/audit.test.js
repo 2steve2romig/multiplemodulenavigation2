@@ -119,13 +119,24 @@ describe('writeAuditLog', () => {
 });
 
 describe('requestContext', () => {
-  test('extracts ip from x-forwarded-for header', () => {
-    const req = { headers: { 'x-forwarded-for': '1.2.3.4', 'user-agent': 'TestAgent/1' } };
+  test('extracts the last (trusted) IP from x-forwarded-for proxy chain', () => {
+    // Vercel appends the real client IP last; first entry is client-controlled.
+    const req = { headers: { 'x-forwarded-for': '1.1.1.1, 2.2.2.2, 3.3.3.3', 'user-agent': 'TestAgent/1' } };
     expect(requestContext(req)).toEqual({
-      ip_address: '1.2.3.4',
+      ip_address: '3.3.3.3',
       user_agent: 'TestAgent/1',
       request_id: null,
     });
+  });
+
+  test('accepts a single IP in x-forwarded-for', () => {
+    const req = { headers: { 'x-forwarded-for': '1.2.3.4' } };
+    expect(requestContext(req).ip_address).toBe('1.2.3.4');
+  });
+
+  test('rejects an injected non-IP string in x-forwarded-for', () => {
+    const req = { headers: { 'x-forwarded-for': 'injected-value' } };
+    expect(requestContext(req).ip_address).toBeNull();
   });
 
   test('extracts x-request-id when present', () => {

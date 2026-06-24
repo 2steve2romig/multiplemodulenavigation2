@@ -114,6 +114,35 @@ describe('unionEntitlements', () => {
     expect(unionEntitlements([], [])).toEqual([]);
   });
 
+  // H-2 (cold review 2026-06-24): expired site row must NOT block an active org grant.
+  // A lapsed site entitlement is accidental; only deliberate suspension should suppress.
+  test('org active row wins when site row status is expired', () => {
+    const NOW = new Date('2026-06-24T12:00:00Z');
+    const site = [{ module_id: 'atp', status: 'expired',  expires_at: null }];
+    const org  = [{ module_id: 'atp', status: 'active',   expires_at: null }];
+    const result = unionEntitlements(site, org, NOW);
+    expect(result).toHaveLength(1);
+    expect(result[0].status).toBe('active'); // org row survives
+  });
+
+  test('org active row wins when site row has a past expires_at (time-lapsed)', () => {
+    const NOW = new Date('2026-06-24T12:00:00Z');
+    const site = [{ module_id: 'atp', status: 'active', expires_at: '2025-01-01T00:00:00Z' }];
+    const org  = [{ module_id: 'atp', status: 'active', expires_at: null }];
+    const result = unionEntitlements(site, org, NOW);
+    expect(result).toHaveLength(1);
+    expect(result[0].expires_at).toBeNull(); // org row survives (no expiry)
+  });
+
+  test('site suspended row still wins over org active (deliberate action)', () => {
+    const NOW = new Date('2026-06-24T12:00:00Z');
+    const site = [{ module_id: 'atp', status: 'suspended', expires_at: null }];
+    const org  = [{ module_id: 'atp', status: 'active',    expires_at: null }];
+    const result = unionEntitlements(site, org, NOW);
+    expect(result).toHaveLength(1);
+    expect(result[0].status).toBe('suspended'); // intentional suppression wins
+  });
+
   test('deduplicates — no duplicate module_ids in result', () => {
     const site = [
       { module_id: 'atp', status: 'active', expires_at: null },
