@@ -11,6 +11,7 @@
 function HomeTech({ onNav }) {
   return (
     <>
+      <HomeQuickActions onNav={onNav} />
       <div className="home-row home-row-2-1">
         <MyDay onNav={onNav} />
         <MyPerformance />

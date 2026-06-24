@@ -32,8 +32,15 @@ const IGroup = ({ s = 14 }) =>
 const ICopy = ({ s = 14 }) =>
 <svg viewBox="0 0 24 24" width={s} height={s} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15V5a2 2 0 0 1 2-2h10" /></svg>;
 
+const IDownload = ({ s = 14 }) =>
+<svg viewBox="0 0 24 24" width={s} height={s} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>;
+
+const ISearch = ({ size = 14 }) =>
+<svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>;
+
 
 // ---- helpers -------------------------------------------------------------
+function RES(path) { return path; }
 function formatAbs(d) {
   const date = d.toLocaleDateString("en-US", { month: "numeric", day: "numeric", year: "numeric" });
   const time = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });

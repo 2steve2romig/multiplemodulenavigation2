@@ -44,6 +44,7 @@ function OriginalHome({ onNav }) {
         <ProgramOverview onNav={onNav} />
         <RecentActivity onNav={onNav} />
       </div>
+      <HomeQuickActions onNav={onNav} />
       {typeof CustomTiles !== "undefined" && <CustomTiles onNav={onNav} />}
       <div className="home-row home-row-2-1">
         <WhatsNew onNav={onNav} />
