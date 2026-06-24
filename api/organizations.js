@@ -8,6 +8,7 @@ const { requireAdminSecret } = require('./_middleware/requireAdminSecret');
 const { handleCors } = require('./_middleware/cors');
 const { supabase } = require('./_lib/supabase');
 const { OrgCreateSchema } = require('./_lib/validate');
+const { writeAuditLog, requestContext } = require('./_lib/audit');
 
 module.exports = async (req, res) => {
   if (handleCors(req, res)) return;
@@ -28,5 +29,16 @@ module.exports = async (req, res) => {
     .single();
 
   if (error) return res.status(500).json({ error: 'Failed to create organization' });
+
+  await writeAuditLog({
+    event_type: 'organization.created',
+    actor_type: 'admin',
+    org_id: data.id,
+    resource_type: 'organization',
+    resource_id: data.id,
+    after_state: data,
+    ...requestContext(req),
+  });
+
   return res.status(201).json({ organization: data });
 };

@@ -13,9 +13,11 @@ function applyCors(req, res) {
   if (origin && ALLOWED_ORIGINS.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Vary', 'Origin');
+    // Only advertise custom headers to allowed origins — prevents fingerprinting
+    // by disallowed origins via OPTIONS preflight.
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Tenant-ID, X-Admin-Secret');
   }
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Tenant-ID, X-Admin-Secret');
 }
 
 function handleCors(req, res) {

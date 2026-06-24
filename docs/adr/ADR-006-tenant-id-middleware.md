@@ -39,7 +39,7 @@ async function extractTenantId(req) {
 
   // DEV/PRE-AUTH only: trust X-Tenant-ID header (never in production).
   const devHeader = req.headers['x-tenant-id'];
-  if (devHeader && process.env.NODE_ENV !== 'production') return devHeader;
+  if (devHeader && process.env.ALLOW_DEV_TENANT_HEADER === 'true') return devHeader;
 
   return null; // no tenantId source available — caller gets 400
 }
@@ -100,7 +100,7 @@ Defer all tenantId extraction decisions until the auth provider is chosen.
 
 ## Reasoning
 
-The cold review correctly identified that scattered inline `req.query.tenantId` reads make auth wiring a multi-file surgical operation. Centralized middleware makes it a single-function replacement. The pre-auth `x-tenant-id` dev header is explicitly dev/test-only (`process.env.NODE_ENV !== 'production'` guard) so it cannot be exploited in production even before auth is wired.
+The cold review correctly identified that scattered inline `req.query.tenantId` reads make auth wiring a multi-file surgical operation. Centralized middleware makes it a single-function replacement. The pre-auth `x-tenant-id` dev header is explicitly dev/test-only (`process.env.ALLOW_DEV_TENANT_HEADER === 'true'` guard) so it cannot be exploited in production even before auth is wired.
 
 ---
 
@@ -110,5 +110,5 @@ The cold review correctly identified that scattered inline `req.query.tenantId` 
 - `requireAdminSecret` middleware is applied to every admin mutation route.
 - `ADMIN_SECRET` environment variable must be set in Vercel before the platform API is deployed publicly.
 - When auth is wired (ADR-004 / ADR-007), only `extractTenantId` is replaced — no route handlers change.
-- The `x-tenant-id` dev header path is removed entirely when auth is wired; it is never available in `NODE_ENV=production`.
+- The `x-tenant-id` dev header path is removed entirely when auth is wired. `ALLOW_DEV_TENANT_HEADER` must never be set to `true` in Vercel production or preview deployments — it is a local development and integration test tool only.
 - `req.tenantId` is the canonical source of `tenantId` for all route handlers. Any route reading from any other source is a bug.
