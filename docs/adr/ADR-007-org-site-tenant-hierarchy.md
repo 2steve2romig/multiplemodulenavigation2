@@ -46,7 +46,7 @@ Organization (Acme Foods Inc.)
    effective = site_entitlements(active) ∪ org_entitlements(active, for site's org)
    ```
    Deduplication by `module_id`; most permissive status wins.
-4. **A Site always belongs to exactly one Organization.** A site cannot exist without a parent org. If a customer has only one location, they still have an org (with one child site).
+4. **A Site MAY belong to an Organization.** `org_id` is nullable — single-location customers operate without a parent org and receive only their site-level entitlements. Multi-site corporate customers link all their sites to an Organization for entitlement inheritance. *(ADR updated 2026-06-24: original text stated org_id was NOT NULL; the actual migration correctly allows null, and this rule is corrected to match.)*
 5. **Users are assigned to Sites**, not Organizations. A corporate admin may be a member of multiple sites.
 6. **Billing address and contract live on the Organization** (not modelled in v1; noted for future billing integration).
 
@@ -65,6 +65,7 @@ CREATE TABLE organizations (
 );
 
 -- Existing tenants table becomes "sites" (or add org_id FK to tenants)
+-- org_id is intentionally nullable: single-location customers have no parent org (see Rule 4).
 ALTER TABLE tenants ADD COLUMN org_id UUID REFERENCES organizations(id);
 
 -- New org-level entitlements table
@@ -112,6 +113,7 @@ New admin routes needed:
 - The flat `tenants` table becomes a "sites" table with an `org_id` FK.
 - All existing `tenantId` references in data rows, API routes, and middleware remain valid — `tenantId` = site ID.
 - `GET /api/modules` complexity increases (one additional query + union logic), but both queries are indexed and the result is small.
-- `POST /api/tenants` (create site) requires an `org_id`; a new `POST /api/organizations` route is needed first.
-- Existing test tenant (`c4d2d99e...`) must be assigned an `org_id` in migration.
+- `POST /api/tenants` (create site) accepts an optional `org_id`. When absent, the site receives only its own site-level entitlements. A `POST /api/organizations` route is required when providing an `org_id`.
+- Existing test tenant (`c4d2d99e...`) may have `org_id = NULL` or be assigned an org via migration.
+- An integration test must confirm that a tenant with `org_id = NULL` returns a valid (possibly empty) module list — not a 500 error.
 - **Not yet implemented** — this ADR documents the decision. Implementation is tracked in Open Item #9 of the design doc.

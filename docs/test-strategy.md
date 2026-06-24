@@ -72,6 +72,11 @@ These tests use the Supabase **anon key** (not service role) to simulate what a 
 | Anon key SELECT on `entitlements` with no tenantId filter | Returns 0 rows (RLS blocks all anon access) |
 | Anon key SELECT on `entitlements` filtering by TENANT_B's ID | Returns 0 rows (RLS blocks without JWT claim) |
 | Anon key INSERT to `entitlements` | Rejected by RLS |
+| Anon key SELECT on `org_entitlements` | Returns 0 rows (RLS deny-all for anon) |
+| Anon key SELECT on `organizations` | Returns 0 rows (RLS deny-all for anon) |
+| Anon key SELECT on `audit_log` | Returns 0 rows (RLS deny-all; 21 CFR audit records never client-readable) |
+| Anon key SELECT on `tenants` | Returns 0 rows (RLS deny-all for anon) |
+| Anon key SELECT on `user_tenant_memberships` | Returns 0 rows (RLS deny-all for anon) |
 | Service role key SELECT on `entitlements` (no RLS bypass) | Returns all rows — confirms service role is server-only; test verifies the key is not in any client-accessible env var |
 
 ### Manifest isolation test

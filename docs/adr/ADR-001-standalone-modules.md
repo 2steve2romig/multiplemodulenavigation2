@@ -58,7 +58,7 @@ The à la carte model and anticipated team structure make standalone isolation t
 
 ## Consequences
 
-- Inter-module communication contract must be defined before any module code is written (Realtime events / webhooks — never direct DB queries).
+- Inter-module communication contract must be defined before any module code is written (**webhooks only** — Supabase Realtime is scoped per project and cannot span the Platform DB and an IQ module DB; see ADR-009). Never direct DB queries across module boundaries.
 - The shell must load module manifests dynamically from the Platform API at runtime; the module list cannot be hardcoded.
 - Local development requires running multiple services; a `docker-compose` or equivalent dev orchestration setup is needed.
 - Cold-start latency across multiple Vercel functions must be managed (warm-up strategies, edge functions where appropriate).

@@ -107,4 +107,21 @@ describeIf(rlsMissing.length === 0)('Supabase RLS isolation (anon key)', () => {
       .eq('tenant_id', process.env.TENANT_B_ID);
     expect(data).toHaveLength(0);
   });
+
+  test('anon key cannot read any org_entitlements row', async () => {
+    const { data } = await anonClient.from('org_entitlements').select('*');
+    expect(data).toHaveLength(0);
+  });
+
+  test('anon key cannot read any organizations row', async () => {
+    const { data } = await anonClient.from('organizations').select('*');
+    expect(data).toHaveLength(0);
+  });
+
+  test('anon key cannot read audit_log', async () => {
+    // audit_log has deny-all RLS; 21 CFR Part 11 records must never be
+    // readable by client roles.
+    const { data } = await anonClient.from('audit_log').select('*');
+    expect(data).toHaveLength(0);
+  });
 });
