@@ -56,7 +56,7 @@ module.exports = async (req, res) => {
   if (to)         query = query.lte('occurred_at', to);
 
   const { data, error, count } = await query;
-  if (error) return res.status(500).json({ error: 'Failed to load audit log', detail: error.message, code: error.code });
+  if (error) return res.status(500).json({ error: 'Failed to load audit log' });
 
   return res.status(200).json({
     audit_log: data,
