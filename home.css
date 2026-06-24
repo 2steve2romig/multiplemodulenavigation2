@@ -321,6 +321,9 @@ html[data-theme="dark"] .hero-title-logo-dark { display: block; }
   pointer-events: none;
   filter: drop-shadow(0 16px 16px rgba(29, 78, 140, 0.5));
 }
+.map-iq-svg { display: block; }
+.map-grid-line { stroke: rgba(13,106,153,0.10); stroke-width: 0.5; }
+.map-floor { stroke: #0D6A99; }
 .map-pin {
   position: absolute;
   width: 30px;

@@ -158,9 +158,7 @@ function MapIQSlide({ active, menuOpen, onMenuToggle, onMenuClose, selected, onS
             className="map-iq-img map-iq-img-facility" src="..." />.
             Slot: .map-iq-stage, max-width 760px, 3:2 aspect.
           */}
-          <div className="map-iq-placeholder" aria-hidden="true">
-            <span className="map-iq-placeholder-label">illustration placeholder</span>
-          </div>
+          <MapIQIllustration />
         </div>
       </div>
 
