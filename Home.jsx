@@ -150,14 +150,6 @@ function MapIQSlide({ active, menuOpen, onMenuToggle, onMenuClose, selected, onS
 
       <div className="hero-center">
         <div className="map-iq-stage">
-          {/*
-            PLACEMENT NOTE — Map IQ hero illustration goes here.
-            Prior art tried: assets/facility_new_hero1.png (isometric facility
-            floor plan with risk donuts) and facility_new_hero.png.
-            Restore by swapping the placeholder below for an <img
-            className="map-iq-img map-iq-img-facility" src="..." />.
-            Slot: .map-iq-stage, max-width 760px, 3:2 aspect.
-          */}
           <MapIQIllustration />
         </div>
       </div>
