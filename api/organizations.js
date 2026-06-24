@@ -8,7 +8,7 @@ const { requireAdminSecret } = require('./_middleware/requireAdminSecret');
 const { handleCors } = require('./_middleware/cors');
 const { supabase } = require('./_lib/supabase');
 const { OrgCreateSchema } = require('./_lib/validate');
-const { writeAuditLog, requestContext } = require('./_lib/audit');
+const { requestContext } = require('./_lib/audit');
 
 module.exports = async (req, res) => {
   if (handleCors(req, res)) return;
@@ -22,23 +22,18 @@ module.exports = async (req, res) => {
     return res.status(400).json({ error: 'Invalid input', details: parsed.error.flatten() });
   }
 
-  const { data, error } = await supabase
-    .from('organizations')
-    .insert(parsed.data)
-    .select()
-    .single();
+  // ADR-008 Phase 2: both INSERTs (organization + audit_log) are atomic via RPC.
+  const ctx = requestContext(req);
+  const { data, error } = await supabase.rpc('create_organization_with_audit', {
+    p_name:       parsed.data.name,
+    p_region:     parsed.data.region,
+    p_actor_id:   'admin',
+    p_ip_address: ctx.ip_address,
+    p_user_agent: ctx.user_agent,
+    p_request_id: ctx.request_id,
+  });
 
   if (error) return res.status(500).json({ error: 'Failed to create organization' });
-
-  await writeAuditLog({
-    event_type: 'organization.created',
-    actor_type: 'admin',
-    org_id: data.id,
-    resource_type: 'organization',
-    resource_id: data.id,
-    after_state: data,
-    ...requestContext(req),
-  });
 
   return res.status(201).json({ organization: data });
 };

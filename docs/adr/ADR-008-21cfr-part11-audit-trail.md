@@ -1,6 +1,6 @@
 # ADR-008: 21 CFR Part 11 Compliance Design - Audit Trail and Electronic Records
 
-**Status:** Accepted - Phase 1 Implemented (2026-06-24)  
+**Status:** Accepted - Phase 1 + Phase 2a Implemented (2026-06-24)  
 **Date:** 2026-06-23  
 **Deciders:** sromig@hygiena.com  
 **Blocking:** Yes - required before any regulated customer goes live (Open Item #8)
@@ -122,15 +122,21 @@ Electronic signatures are NOT required for every API call — only for regulated
 4. Add `GET /api/audit-log` route (admin only) — paginated, filterable by `tenant_id`, `event_type`, `resource_id`, `occurred_at` range.
 5. Run migration `004_audit_hardening.sql`: PostgreSQL immutability trigger on `audit_log` (blocks UPDATE/DELETE for all roles including service role); RLS on `organizations` and `org_entitlements`; `(resource_type, resource_id)` index.
 
-**Hard production blockers in Phase 1 (cold review 2026-06-24):**
+**Hard production blockers identified in Phase 1 (cold review 2026-06-24):**
 
-- **Fail-open audit writes are not 21 CFR Part 11 compliant.** The current implementation calls `writeAuditLog()` after the primary database write. If the audit write fails, the business record exists without an audit trail — a direct violation of §11.10(b) completeness requirement. "Fail-open with alerting" is an acceptable engineering tradeoff for non-regulated workloads; it is not an acceptable interpretation of 21 CFR Part 11. **This must be resolved before any regulated customer goes live.** The fix is to wrap each regulated mutation and its audit write in a single PostgreSQL transaction via Supabase RPC. If the audit write fails, the transaction rolls back and the mutation is rejected.
+- ~~**Fail-open audit writes are not 21 CFR Part 11 compliant.**~~ **RESOLVED — Phase 2a (2026-06-24).** Migration `005_transactional_audit_rpcs.sql` introduces four PostgreSQL RPC functions (`create_entitlement_with_audit`, `create_org_entitlement_with_audit`, `create_tenant_with_audit`, `create_organization_with_audit`). Each function wraps the business record INSERT and the `audit_log` INSERT in a single transaction. All four regulated mutation routes (`api/entitlements.js`, `api/org-entitlements.js`, `api/tenants/index.js`, `api/organizations.js`) now call `supabase.rpc()` instead of the fail-open `writeAuditLog()` helper. `writeAuditLog()` is retained in `api/_lib/audit.js` for non-regulated logging paths only.
 
-- **`actor_id` is not attributable.** Phase 1 audit records carry `actor_id: 'admin'` (a static string from the shared admin secret). ALCOA requires identifying the specific individual. When auth is wired, `actor_id` will be replaced with the authenticated user's JWT subject. To avoid silently mixing attributed and non-attributed records, the auth enablement event must write a `system.auth_enabled` tombstone record to mark the boundary — records before the boundary are prototype-phase; records after carry real identities. This tombstone must be written as the first action when auth is enabled.
+- **`actor_id` is not attributable.** Phase 1 and 2a audit records carry `actor_id: 'admin'` (a static string from the shared admin secret). ALCOA requires identifying the specific individual. When auth is wired, `actor_id` will be replaced with the authenticated user's JWT subject. To avoid silently mixing attributed and non-attributed records, the auth enablement event must write a `system.auth_enabled` tombstone record to mark the boundary — records before the boundary are prototype-phase; records after carry real identities. This tombstone must be written as the first action when auth is enabled.
 
-### Phase 2 - Electronic signatures (per IQ module)
+### Phase 2a - Transactional audit writes *(COMPLETED 2026-06-24)*
 
-Implemented inside each IQ module's API when a workflow step requires a regulated signature. Not in the platform layer.
+Migration `005_transactional_audit_rpcs.sql`: four PostgreSQL functions wrapping each regulated mutation + audit INSERT in a single transaction. All four mutation routes updated to use `supabase.rpc()`. `writeAuditLog()` fail-open helper retained for non-regulated paths; no longer called on regulated mutation routes.
+
+Integration tests added in `test/integration/admin-routes.test.js` verifying that each mutation route creates a corresponding `audit_log` entry (atomicity happy-path gate).
+
+### Phase 2b - Electronic signatures (per IQ module)
+
+Implemented inside each IQ module's API when a workflow step requires a regulated signature. Not in the platform layer. Pending — no IQ modules built yet.
 
 ### Phase 3 - Validation (pre-regulated-customer)
 
@@ -155,6 +161,6 @@ Implemented inside each IQ module's API when a workflow step requires a regulate
 - Every regulated mutation path gains a synchronous audit write — adds ~5ms latency per request (one additional INSERT).
 - Audit log grows unboundedly — must plan for data retention (FDA requires records kept for minimum 2 years for food safety records).
 - `GET /api/audit-log` is sensitive — requires strict access control when auth is wired.
-- The `audit.js` helper currently never throws (fail-open). **This must change before regulated customers:** wrap mutation + audit in a Supabase RPC so both succeed or both roll back. See hard production blocker above.
-- **Phase 1 implemented** — `audit_log` table (migration 003), `api/_lib/audit.js` helper, and audit writes wired into all entitlement and tenant mutation routes. `GET /api/audit-log` admin read route live.
-- **Phase 2 and 3** remain pending — electronic signatures per IQ module workflow, and system validation protocol before regulated customers go live.
+- ~~The `audit.js` helper currently never throws (fail-open).~~ **Resolved Phase 2a.** All regulated mutation routes use transactional RPCs. `writeAuditLog()` retained only for non-regulated paths.
+- **Phase 1 + 2a implemented** — `audit_log` table (migration 003), immutability trigger (migration 004), four transactional RPC functions (migration 005). All four regulated mutation routes are now fail-closed. `GET /api/audit-log` admin read route live.
+- **Phase 2b and 3** remain pending — electronic signatures per IQ module workflow, and system validation protocol before regulated customers go live.

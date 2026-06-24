@@ -2,9 +2,14 @@
 
 // ADR-008: 21 CFR Part 11 audit trail helper.
 //
-// writeAuditLog() is intentionally fail-open: a failed audit write logs a
-// console.error but never throws. The primary operation must not be blocked
-// by an audit failure — but failures must be loud so they're caught in ops.
+// writeAuditLog() is NO LONGER USED for regulated mutations.
+// ADR-008 Phase 2 (migration 005) wraps each regulated mutation + its
+// audit_log INSERT in a single PostgreSQL RPC transaction (fail-closed).
+// See api/entitlements.js, api/organizations.js, api/tenants/index.js,
+// api/org-entitlements.js — all now call supabase.rpc() directly.
+//
+// writeAuditLog() is retained here for non-regulated read-path logging.
+// If no such paths exist, this file can be removed when auth is wired.
 
 const { supabase } = require('./supabase');
 

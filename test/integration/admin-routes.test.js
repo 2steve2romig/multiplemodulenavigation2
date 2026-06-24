@@ -19,6 +19,10 @@ if (missing.length) {
   console.warn(`Admin route tests skipped — missing env vars: ${missing.join(', ')}`);
 }
 
+// Audit atomicity tests only need PLATFORM_URL + ADMIN_SECRET.
+const auditRequired = ['PLATFORM_URL', 'ADMIN_SECRET'];
+const auditMissing = auditRequired.filter(k => !process.env[k]);
+
 const describeIf = (cond) => cond ? describe : describe.skip;
 
 const BASE = () => process.env.PLATFORM_URL;
@@ -124,6 +128,106 @@ describeIf(missing.length === 0)('POST /api/org-entitlements (admin)', () => {
   test('returns 405 for GET', async () => {
     const res = await fetch(`${BASE()}/api/org-entitlements`);
     expect(res.status).toBe(405);
+  });
+});
+
+// ─── Audit atomicity — ADR-008 Phase 2 ───────────────────────────────────────
+//
+// These tests prove that each regulated mutation creates a corresponding
+// audit_log entry. With the transactional RPC pattern, both INSERTs are
+// atomic: if the audit write fails, the business record rolls back.
+// These tests verify the happy-path invariant.
+
+describeIf(auditMissing.length === 0)('Audit atomicity (ADR-008 Phase 2)', () => {
+  const AUDIT_HEADERS = () => ({
+    'x-admin-secret': process.env.ADMIN_SECRET,
+  });
+
+  async function getAuditEntries(resourceType, resourceId) {
+    const res = await fetch(
+      `${BASE()}/api/audit-log?resource_type=${resourceType}&resource_id=${encodeURIComponent(resourceId)}`,
+      { headers: AUDIT_HEADERS() },
+    );
+    const body = await res.json();
+    return body.logs ?? [];
+  }
+
+  test('POST /api/tenants creates a tenant.created audit entry', async () => {
+    const res = await fetch(`${BASE()}/api/tenants`, {
+      method: 'POST',
+      headers: ADMIN(),
+      body: JSON.stringify({ name: 'Audit Atomicity — Tenant' }),
+    });
+    expect(res.status).toBe(201);
+    const { tenant } = await res.json();
+
+    const logs = await getAuditEntries('tenant', tenant.id);
+    const entry = logs.find(l => l.event_type === 'tenant.created');
+    expect(entry).toBeDefined();
+    expect(entry.resource_id).toBe(tenant.id);
+    expect(entry.tenant_id).toBe(tenant.id);
+  });
+
+  test('POST /api/organizations creates an organization.created audit entry', async () => {
+    const res = await fetch(`${BASE()}/api/organizations`, {
+      method: 'POST',
+      headers: ADMIN(),
+      body: JSON.stringify({ name: 'Audit Atomicity — Org' }),
+    });
+    expect(res.status).toBe(201);
+    const { organization } = await res.json();
+
+    const logs = await getAuditEntries('organization', organization.id);
+    const entry = logs.find(l => l.event_type === 'organization.created');
+    expect(entry).toBeDefined();
+    expect(entry.resource_id).toBe(organization.id);
+    expect(entry.org_id).toBe(organization.id);
+  });
+
+  test('POST /api/entitlements creates an entitlement.created audit entry', async () => {
+    const tenantRes = await fetch(`${BASE()}/api/tenants`, {
+      method: 'POST',
+      headers: ADMIN(),
+      body: JSON.stringify({ name: 'Audit Atomicity — Entitlement Site' }),
+    });
+    const { tenant } = await tenantRes.json();
+
+    const res = await fetch(`${BASE()}/api/entitlements`, {
+      method: 'POST',
+      headers: ADMIN(),
+      body: JSON.stringify({ tenant_id: tenant.id, module_id: 'atp', status: 'active' }),
+    });
+    expect(res.status).toBe(201);
+    const { entitlement } = await res.json();
+
+    const logs = await getAuditEntries('entitlement', entitlement.id);
+    const entry = logs.find(l => l.event_type === 'entitlement.created');
+    expect(entry).toBeDefined();
+    expect(entry.resource_id).toBe(entitlement.id);
+    expect(entry.tenant_id).toBe(tenant.id);
+  });
+
+  test('POST /api/org-entitlements creates an org_entitlement.created audit entry', async () => {
+    const orgRes = await fetch(`${BASE()}/api/organizations`, {
+      method: 'POST',
+      headers: ADMIN(),
+      body: JSON.stringify({ name: 'Audit Atomicity — OrgEnt Org' }),
+    });
+    const { organization } = await orgRes.json();
+
+    const res = await fetch(`${BASE()}/api/org-entitlements`, {
+      method: 'POST',
+      headers: ADMIN(),
+      body: JSON.stringify({ org_id: organization.id, module_id: 'map', status: 'active' }),
+    });
+    expect(res.status).toBe(201);
+    const { org_entitlement } = await res.json();
+
+    const logs = await getAuditEntries('org_entitlement', org_entitlement.id);
+    const entry = logs.find(l => l.event_type === 'org_entitlement.created');
+    expect(entry).toBeDefined();
+    expect(entry.resource_id).toBe(org_entitlement.id);
+    expect(entry.org_id).toBe(organization.id);
   });
 });
 
