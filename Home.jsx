@@ -22,11 +22,13 @@ function Home({ onNav, role, onRoleChange }) {
   return (
     <div className="home-page" data-role={r}>
       <HomeHero />
+      <div style={{ padding: "0 24px 8px" }}>
+        <RoleToggle role={r} onChange={onRoleChange} />
+      </div>
       {r === "tech" ?
       <HomeTech onNav={onNav} /> :
       r === "original" ?
       <OriginalHome onNav={onNav} /> :
-
       <HomeAdmin onNav={onNav} />
       }
     </div>);
