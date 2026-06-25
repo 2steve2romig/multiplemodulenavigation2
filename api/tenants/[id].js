@@ -9,7 +9,7 @@ const { requireAdminSecret } = require('../_middleware/requireAdminSecret');
 const { handleCors } = require('../_middleware/cors');
 const { supabase } = require('../_lib/supabase');
 const { TenantPatchSchema } = require('../_lib/validate');
-const { writeAuditLog, requestContext } = require('../_lib/audit');
+const { requestContext } = require('../_lib/audit');
 const { z } = require('zod');
 
 const UuidSchema = z.string().uuid();
@@ -51,24 +51,19 @@ module.exports = async (req, res) => {
       return res.status(400).json({ error: 'Invalid input', details: parsed.error.flatten() });
     }
 
-    const { data, error } = await supabase
-      .from('tenants')
-      .update({ ...parsed.data, updated_at: new Date().toISOString() })
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error || !data) return res.status(404).json({ error: 'Tenant not found' });
-
-    await writeAuditLog({
-      event_type: 'tenant.updated',
-      actor_type: 'admin',
-      tenant_id: data.id,
-      resource_type: 'tenant',
-      resource_id: data.id,
-      after_state: data,
-      ...requestContext(req),
+    // ADR-008 Phase 2: atomic UPDATE + audit_log INSERT via RPC (fail-closed).
+    const ctx = requestContext(req);
+    const { data, error } = await supabase.rpc('update_tenant_org_with_audit', {
+      p_id:         id,
+      p_org_id:     parsed.data.org_id,
+      p_actor_id:   'admin',
+      p_ip_address: ctx.ip_address,
+      p_user_agent: ctx.user_agent,
+      p_request_id: ctx.request_id,
     });
+
+    if (error) return res.status(500).json({ error: 'Failed to update tenant' });
+    if (data === null) return res.status(404).json({ error: 'Tenant not found' });
 
     return res.status(200).json({ tenant: data });
   }

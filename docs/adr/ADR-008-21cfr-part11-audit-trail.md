@@ -138,6 +138,8 @@ Integration tests added in `test/integration/admin-routes.test.js` verifying tha
 
 Migration 006 also changes `audit_log.tenant_id` and `audit_log.org_id` FKs from `ON DELETE SET NULL` → `ON DELETE RESTRICT`, and adds `deleted_at timestamptz` to `tenants` and `organizations` (soft-delete pattern — only compliant deletion path for regulated entities with audit records).
 
+**Extended 2026-06-25** (regression fix) — Migration `009_tenant_org_update_rpc.sql` adds `update_tenant_org_with_audit` RPC. `PATCH /api/tenants/:id` (`api/tenants/[id].js`) was using fail-open `writeAuditLog()` — now migrated to the transactional RPC pattern. Captures `before_state`/`after_state` and emits `tenant.org_assigned` event. Audit-entry verification test added. Also corrected a test bug: integration tests were reading `body.logs` but the GET /api/audit-log route returns `body.audit_log`; the key mismatch caused all audit atomicity assertions to be silently vacuous.
+
 ### Phase 2b - Electronic signatures (per IQ module)
 
 Implemented inside each IQ module's API when a workflow step requires a regulated signature. Not in the platform layer. Pending — no IQ modules built yet.

@@ -149,7 +149,7 @@ describeIf(auditMissing.length === 0)('Audit atomicity (ADR-008 Phase 2)', () =>
       { headers: AUDIT_HEADERS() },
     );
     const body = await res.json();
-    return body.logs ?? [];
+    return body.audit_log ?? [];
   }
 
   test('POST /api/tenants creates a tenant.created audit entry', async () => {
@@ -313,7 +313,7 @@ describeIf(auditMissing.length === 0)('PATCH /api/entitlements/:id (admin)', () 
       `${BASE()}/api/audit-log?resource_type=entitlement&resource_id=${encodeURIComponent(testEntitlementId)}`,
       { headers: { 'x-admin-secret': process.env.ADMIN_SECRET } },
     );
-    const { logs } = await logsRes.json();
+    const { audit_log: logs } = await logsRes.json();
     const entry = logs.find(l => l.event_type === 'entitlement.updated');
     expect(entry).toBeDefined();
     expect(entry.before_state.status).toBe('active');
@@ -400,7 +400,7 @@ describeIf(missing.length === 0)('PATCH /api/tenants/:id (admin)', () => {
     expect(res.status).toBe(400);
   });
 
-  test('assigns org_id to tenant', async () => {
+  test('assigns org_id to tenant and creates tenant.org_assigned audit entry', async () => {
     const res = await fetch(`${BASE()}/api/tenants/${testTenantId}`, {
       method: 'PATCH',
       headers: ADMIN(),
@@ -410,5 +410,15 @@ describeIf(missing.length === 0)('PATCH /api/tenants/:id (admin)', () => {
     const { tenant } = await res.json();
     expect(tenant.org_id).toBe(testOrgId);
     expect(tenant.id).toBe(testTenantId);
+
+    const logsRes = await fetch(
+      `${BASE()}/api/audit-log?resource_type=tenant&resource_id=${encodeURIComponent(testTenantId)}`,
+      { headers: { 'x-admin-secret': process.env.ADMIN_SECRET } },
+    );
+    const { audit_log: logs } = await logsRes.json();
+    const entry = logs.find(l => l.event_type === 'tenant.org_assigned');
+    expect(entry).toBeDefined();
+    expect(entry.before_state.org_id).toBeNull();
+    expect(entry.after_state.org_id).toBe(testOrgId);
   });
 });
