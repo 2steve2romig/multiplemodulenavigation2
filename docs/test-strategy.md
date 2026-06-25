@@ -79,10 +79,12 @@ These tests use the Supabase **anon key** (not service role) to simulate what a 
 | Anon key SELECT on `user_tenant_memberships` | Returns 0 rows (RLS deny-all for anon) |
 | Service role key SELECT on `entitlements` (no RLS bypass) | Returns all rows — confirms service role is server-only; test verifies the key is not in any client-accessible env var |
 
-### Schema constraint tests (migration 006)
+### Schema constraint tests (migrations 006–008)
 | Test | Expected result |
 |---|---|
 | Service role hard-delete of tenant with audit records | Rejected by `audit_log_tenant_id_fkey` ON DELETE RESTRICT — 21 CFR ALCOA "Attributable" |
+| Service role insert of second user with same `external_auth_id` | Rejected by UNIQUE constraint — one platform user per provider identity |
+| POST /api/entitlements with `module_id` not in `module_manifests` | 500 — FK violation from `entitlements_module_id_fkey` (validated in migration 008) |
 
 ### Manifest isolation test
 | Test | Expected result |

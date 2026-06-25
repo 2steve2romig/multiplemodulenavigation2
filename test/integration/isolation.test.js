@@ -165,4 +165,19 @@ describeIf(schemaMissing.length === 0)('Schema constraints — ON DELETE RESTRIC
     expect(error).not.toBeNull();
     expect(error.message).toMatch(/foreign key constraint/i);
   });
+
+  test('external_auth_id UNIQUE constraint prevents duplicate auth provider mappings', async () => {
+    await serviceClient.from('users').insert({
+      email:            'unique-auth-test-1@example.com',
+      external_auth_id: 'auth0|uniqueness-test-abc',
+    });
+
+    const { error } = await serviceClient.from('users').insert({
+      email:            'unique-auth-test-2@example.com',
+      external_auth_id: 'auth0|uniqueness-test-abc',
+    });
+
+    expect(error).not.toBeNull();
+    expect(error.message).toMatch(/unique/i);
+  });
 });

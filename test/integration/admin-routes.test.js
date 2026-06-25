@@ -326,6 +326,29 @@ describeIf(auditMissing.length === 0)('PATCH /api/entitlements/:id (admin)', () 
   });
 });
 
+// ─── Module FK enforcement (migration 006 + 008) ─────────────────────────────
+// Proves that the module_id FK to module_manifests rejects ghost entitlements.
+// Requires: migration 006 (NOT VALID FK) + migration 008 (VALIDATE CONSTRAINT)
+// applied to the test Supabase project.
+
+describeIf(auditMissing.length === 0)('Module FK enforcement', () => {
+  test('POST /api/entitlements with non-existent module_id is rejected', async () => {
+    const tenantRes = await fetch(`${BASE()}/api/tenants`, {
+      method: 'POST',
+      headers: ADMIN(),
+      body: JSON.stringify({ name: 'FK Enforcement Test Site' }),
+    });
+    const { tenant } = await tenantRes.json();
+
+    const res = await fetch(`${BASE()}/api/entitlements`, {
+      method: 'POST',
+      headers: ADMIN(),
+      body: JSON.stringify({ tenant_id: tenant.id, module_id: 'ghost-module-xyz', status: 'active' }),
+    });
+    expect(res.status).toBe(500);
+  });
+});
+
 // ─── PATCH /api/tenants/:id ───────────────────────────────────────────────────
 
 describeIf(missing.length === 0)('PATCH /api/tenants/:id (admin)', () => {
